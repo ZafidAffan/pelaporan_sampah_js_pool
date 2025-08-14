@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const db = require('./db'); // ini adalah koneksi dari db.js
+const db = require('./db'); // pool dari db.js
 
-// Middleware untuk CORS (jika belum global)
+// CORS middleware
 router.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', '*');
@@ -16,12 +16,10 @@ router.use((req, res, next) => {
 router.post('/', (req, res) => {
   const { email, password } = req.body;
 
-  // Validasi input
   if (!email || !password) {
     return res.status(400).json({ error: 'Kolom email dan password wajib diisi' });
   }
 
-  // Cek user di database
   const sql = "SELECT user_id, password, name FROM user WHERE email = ?";
   db.query(sql, [email], (err, results) => {
     if (err) {
@@ -34,13 +32,13 @@ router.post('/', (req, res) => {
 
     const user = results[0];
 
-    // Bandingkan password
-    bcrypt.compare(password, user.password, (err, result) => {
-      if (!result) {
+    bcrypt.compare(password, user.password, (err, match) => {
+      if (err) return res.status(500).json({ error: 'Error bcrypt: ' + err.message });
+
+      if (!match) {
         return res.status(401).json({ error: 'Password salah' });
       }
 
-      // Sukses
       res.json({
         message: 'Login berhasil',
         userId: user.user_id,
