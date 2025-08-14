@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const db = require('./db'); // koneksi ke MySQL
+const db = require('./db'); // koneksi ke MySQL pool
 
 // Middleware CORS (optional jika sudah global di app)
 router.use((req, res, next) => {
@@ -14,10 +14,10 @@ router.use((req, res, next) => {
 
 // POST /register
 router.post('/', async (req, res) => {
-  const { email, password, displayName, phone } = req.body;
+  const { name, email, phone, password } = req.body;
 
   // Validasi input
-  const required = ['email', 'password', 'displayName'];
+  const required = ['name', 'email', 'password'];
   for (let field of required) {
     if (!req.body[field] || req.body[field].trim() === '') {
       return res.status(400).json({ error: `Kolom ${field} wajib diisi` });
@@ -27,8 +27,8 @@ router.post('/', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const sql = "INSERT INTO user (email, password, name, phone) VALUES (?, ?, ?, ?)";
-    db.query(sql, [email, hashedPassword, displayName, phone || null], (err, result) => {
+    const sql = "INSERT INTO user (name, email, phone, password) VALUES (?, ?, ?, ?)";
+    db.query(sql, [name, email, phone || null, hashedPassword], (err, result) => {
       if (err) {
         return res.status(500).json({ error: 'Gagal menyimpan data: ' + err.message });
       }
