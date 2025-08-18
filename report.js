@@ -1,58 +1,70 @@
-const express = require('express');
-const multer = require('multer');
-const axios = require('axios');
-const fs = require('fs');
-const db = require('./db'); // koneksi MySQL kamu
+import mysql from "mysql2/promise";
+import axios from "axios";
 
-require('dotenv').config(); // supaya bisa baca .env di local
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-const app = express();
-const upload = multer({ dest: 'uploads/' });
-
-app.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Tidak ada file yang diupload' });
+    const { description, latitude, longitude, address, image } = req.body;
+
+    if (!description || !latitude || !longitude || !address || !image) {
+      return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
-    // baca file yang diupload
-    const imageData = fs.readFileSync(req.file.path, { encoding: 'base64' });
+    // Ambil API key dari environment Vercel
+    const imgbbApiKey = process.env.IMGBB_API_KEY;
+    if (!imgbbApiKey) {
+      return res.status(500).json({ error: "IMGBB_API_KEY tidak ditemukan di environment" });
+    }
 
-    // kirim ke ImgBB
-    const response = await axios.post(
-      'https://api.imgbb.com/1/upload',
-      null,
+    // Upload ke ImgBB
+    const uploadResponse = await axios.post(
+      `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
+      new URLSearchParams({
+        image: image, // base64 string
+      }),
       {
-        params: {
-          key: process.env.IMGBB_API_KEY, // ambil dari Vercel env
-          image: imageData,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
         },
       }
     );
 
-    // ambil URL gambar
-    const imageUrl = response.data.data.url;
+    if (!uploadResponse.data.success) {
+      return res.status(400).json({ error: "Gagal upload gambar ke ImgBB" });
+    }
 
-    // contoh simpan ke database MySQL
-    const sql = 'INSERT INTO reports (image_url) VALUES (?)';
-    db.query(sql, [imageUrl], (err, result) => {
-      if (err) {
-        console.error('Gagal simpan ke database:', err);
-        return res.status(500).json({ error: 'Gagal simpan ke database' });
-      }
-      res.json({
-        message: 'Upload berhasil',
-        imageUrl,
-        reportId: result.insertId,
-      });
+    const imageUrl = uploadResponse.data.data.url;
+
+    // Koneksi database (pakai environment variable Vercel)
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
     });
-  } catch (err) {
-    console.error('Gagal mengunggah ke ImgBB:', err.response?.data || err.message);
-    res.status(500).json({
-      error: 'Gagal mengunggah ke ImgBB',
-      detail: err.response?.data || err.message,
+
+    const [result] = await connection.execute(
+      `INSERT INTO reports (description, latitude, longitude, address, image_url, status, created_at) 
+       VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
+      [description, latitude, longitude, address, imageUrl]
+    );
+
+    await connection.end();
+
+    return res.status(200).json({
+      success: true,
+      message: "Laporan berhasil dikirim",
+      report_id: result.insertId,
+      image_url: imageUrl,
+    });
+  } catch (error) {
+    console.error("Error di report.js:", error.response?.data || error.message);
+    return res.status(500).json({
+      error: "Terjadi kesalahan server",
+      detail: error.response?.data || error.message,
     });
   }
-});
-
-app.listen(3000, () => console.log('Server berjalan di port 3000'));
+}
