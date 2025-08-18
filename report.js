@@ -1,67 +1,58 @@
 const express = require('express');
 const multer = require('multer');
-const db = require('./db');
 const axios = require('axios');
+const fs = require('fs');
+const db = require('./db'); // koneksi MySQL kamu
 
-const router = express.Router();
+require('dotenv').config(); // supaya bisa baca .env di local
 
-// Gunakan memoryStorage karena kita hanya kirim buffer ke ImgBB
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const app = express();
+const upload = multer({ dest: 'uploads/' });
 
-// Middleware CORS sederhana
-router.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Allow-Methods', 'POST');
-  next();
-});
-
-// POST /report
-router.post('/', upload.single('image'), async (req, res) => {
-  const file = req.file;
-  const { user_id, description, latitude, longitude, address } = req.body;
-
-  if (!file) {
-    return res.status(400).json({ error: 'Gambar tidak ditemukan atau gagal diunggah' });
-  }
-
-  if (!user_id || !description || !latitude || !longitude || !address) {
-    return res.status(400).json({ error: 'Data tidak lengkap' });
-  }
-
+app.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    // Convert buffer ke base64
-    const base64Image = file.buffer.toString('base64');
+    if (!req.file) {
+      return res.status(400).json({ error: 'Tidak ada file yang diupload' });
+    }
 
-    // Upload ke ImgBB
-    const imgbbApiKey = process.env.IMGBB_API_KEY; // simpan di .env
-    const response = await axios.post(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-      image: base64Image
-    });
+    // baca file yang diupload
+    const imageData = fs.readFileSync(req.file.path, { encoding: 'base64' });
 
+    // kirim ke ImgBB
+    const response = await axios.post(
+      'https://api.imgbb.com/1/upload',
+      null,
+      {
+        params: {
+          key: process.env.IMGBB_API_KEY, // ambil dari Vercel env
+          image: imageData,
+        },
+      }
+    );
+
+    // ambil URL gambar
     const imageUrl = response.data.data.url;
 
-    // Simpan ke database
-    const status = 'pending';
-    const created_at = new Date();
-
-    const sql = `INSERT INTO reports 
-      (user_id, description, img_url, latitude, longitude, address, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    db.query(sql, [user_id, description, imageUrl, latitude, longitude, address, status, created_at], (err, result) => {
+    // contoh simpan ke database MySQL
+    const sql = 'INSERT INTO reports (image_url) VALUES (?)';
+    db.query(sql, [imageUrl], (err, result) => {
       if (err) {
-        return res.status(500).json({ error: 'Gagal menyimpan laporan: ' + err.message });
+        console.error('Gagal simpan ke database:', err);
+        return res.status(500).json({ error: 'Gagal simpan ke database' });
       }
-
-      res.json({ success: true, message: 'Laporan berhasil dikirim', img_url: imageUrl });
+      res.json({
+        message: 'Upload berhasil',
+        imageUrl,
+        reportId: result.insertId,
+      });
     });
-
   } catch (err) {
-    return res.status(500).json({ error: 'Gagal mengunggah ke ImgBB: ' + err.message });
+    console.error('Gagal mengunggah ke ImgBB:', err.response?.data || err.message);
+    res.status(500).json({
+      error: 'Gagal mengunggah ke ImgBB',
+      detail: err.response?.data || err.message,
+    });
   }
 });
 
-module.exports = router;
-
+app.listen(3000, () => console.log('Server berjalan di port 3000'));
