@@ -1,11 +1,11 @@
-import mysql from "mysql2/promise";
-import axios from "axios";
+// report.js
+const express = require('express');
+const mysql = require('mysql2/promise');
+const axios = require('axios');
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+const router = express.Router();
 
+router.post('/', async (req, res) => {
   try {
     const { description, latitude, longitude, address, image } = req.body;
 
@@ -13,7 +13,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
-    // Ambil API key dari environment Vercel
     const imgbbApiKey = process.env.IMGBB_API_KEY;
     if (!imgbbApiKey) {
       return res.status(500).json({ error: "IMGBB_API_KEY tidak ditemukan di environment" });
@@ -22,14 +21,8 @@ export default async function handler(req, res) {
     // Upload ke ImgBB
     const uploadResponse = await axios.post(
       `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
-      new URLSearchParams({
-        image: image, // base64 string
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
+      new URLSearchParams({ image }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
     if (!uploadResponse.data.success) {
@@ -38,7 +31,7 @@ export default async function handler(req, res) {
 
     const imageUrl = uploadResponse.data.data.url;
 
-    // Koneksi database (pakai environment variable Vercel)
+    // Koneksi DB
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
@@ -67,4 +60,6 @@ export default async function handler(req, res) {
       detail: error.response?.data || error.message,
     });
   }
-}
+});
+
+module.exports = router;
