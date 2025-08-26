@@ -1,9 +1,8 @@
 // report.js
 const express = require('express');
-const mysql = require('mysql2/promise');
 const axios = require('axios');
 const multer = require('multer');
-const fs = require('fs');
+const pool = require('./db').promise(); // ambil pool dari db.js, pakai promise()
 
 const router = express.Router();
 
@@ -40,22 +39,12 @@ router.post('/', upload.single('image'), async (req, res) => {
 
     const imageUrl = uploadResponse.data.data.url;
 
-    // koneksi ke database
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT || 3306,
-    });
-
-    const [result] = await connection.execute(
+    // pakai pool dari db.js
+    const [result] = await pool.execute(
       `INSERT INTO reports (user_id, description, latitude, longitude, address, img_url, status, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
       [user_id, description, latitude, longitude, address, imageUrl]
     );
-
-    await connection.end();
 
     return res.status(200).json({
       success: true,
