@@ -2,32 +2,28 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
-const multer = require('multer');
 
 const router = express.Router();
-const upload = multer(); // simpan file di memory (buffer)
 
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { description, latitude, longitude, address } = req.body;
-    const imageFile = req.file;
+    const { user_id, description, latitude, longitude, address, image } = req.body;
 
-    if (!description || !latitude || !longitude || !address || !imageFile) {
+    // Cek semua field wajib
+    if (!user_id || !description || !latitude || !longitude || !address || !image) {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
+    // Ambil API key ImgBB
     const imgbbApiKey = process.env.IMGBB_API_KEY;
     if (!imgbbApiKey) {
       return res.status(500).json({ error: "IMGBB_API_KEY tidak ditemukan di environment" });
     }
 
-    // Convert buffer file → base64 string
-    const base64Image = imageFile.buffer.toString("base64");
-
-    // Upload ke ImgBB
+    // Upload gambar ke ImgBB
     const uploadResponse = await axios.post(
       `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
-      new URLSearchParams({ image: base64Image }),
+      new URLSearchParams({ image }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
@@ -37,18 +33,20 @@ router.post('/', upload.single('image'), async (req, res) => {
 
     const imageUrl = uploadResponse.data.data.url;
 
-    // Koneksi DB
+    // Koneksi ke database Railway
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3306, // Railway biasanya kasih port custom
     });
 
+    // Insert ke tabel reports (pakai img_url sesuai DB kamu)
     const [result] = await connection.execute(
-      `INSERT INTO reports (description, latitude, longitude, address, image_url, status, created_at) 
-       VALUES (?, ?, ?, ?, ?, 'pending', NOW())`,
-      [description, latitude, longitude, address, imageUrl]
+      `INSERT INTO reports (user_id, description, latitude, longitude, address, img_url, status, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
+      [user_id, description, latitude, longitude, address, imageUrl]
     );
 
     await connection.end();
