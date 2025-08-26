@@ -1,64 +1,64 @@
-// report.js
-const express = require('express');
-const axios = require('axios');
-const multer = require('multer');
-const pool = require('./db').promise(); // ambil pool dari db.js, pakai promise()
+import express from "express";
+import multer from "multer";
+import path from "path";
+import db from "../config/db.js"; // koneksi db callback style
+import imgbbUploader from "imgbb-uploader";
 
 const router = express.Router();
 
-// setup multer (simpan file di memori sementara)
-const upload = multer({ storage: multer.memoryStorage() });
+// Konfigurasi multer (buat simpan file di tmp sebelum diupload ke ImgBB)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: storage });
 
-router.post('/', upload.single('image'), async (req, res) => {
-  try {
-    const { user_id, description, latitude, longitude, address } = req.body;
+// Endpoint tambah report
+router.post("/", upload.single("image"), (req, res) => {
+  const { user_id, description, latitude, longitude, address } = req.body;
+  const imageFile = req.file;
 
-    // cek field
-    if (!user_id || !description || !latitude || !longitude || !address || !req.file) {
-      return res.status(400).json({ error: "Semua field wajib diisi" });
-    }
-
-    const imgbbApiKey = process.env.IMGBB_API_KEY;
-    if (!imgbbApiKey) {
-      return res.status(500).json({ error: "IMGBB_API_KEY tidak ditemukan di environment" });
-    }
-
-    // convert file buffer ke base64
-    const imageBase64 = req.file.buffer.toString("base64");
-
-    // upload ke ImgBB
-    const uploadResponse = await axios.post(
-      `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
-      new URLSearchParams({ image: imageBase64 }),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-    );
-
-    if (!uploadResponse.data.success) {
-      return res.status(400).json({ error: "Gagal upload gambar ke ImgBB" });
-    }
-
-    const imageUrl = uploadResponse.data.data.url;
-
-    // pakai pool dari db.js
-    const [result] = await pool.execute(
-      `INSERT INTO reports (user_id, description, latitude, longitude, address, img_url, status, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
-      [user_id, description, latitude, longitude, address, imageUrl]
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Laporan berhasil dikirim",
-      report_id: result.insertId,
-      image_url: imageUrl,
-    });
-  } catch (error) {
-    console.error("Error di report.js:", error.response?.data || error.message);
-    return res.status(500).json({
-      error: "Terjadi kesalahan server",
-      detail: error.response?.data || error.message,
-    });
+  if (!imageFile) {
+    return res.status(400).json({ error: "Image is required" });
   }
+
+  // Upload ke ImgBB
+  imgbbUploader({
+    apiKey: process.env.IMGBB_API_KEY,
+    imagePath: imageFile.path,
+  })
+    .then((response) => {
+      const imageUrl = response.url;
+
+      const sql = `INSERT INTO reports 
+        (user_id, description, image_url, status, latitude, longitude, address, created_at) 
+        VALUES (?, ?, ?, 'pending', ?, ?, ?, NOW())`;
+
+      db.query(
+        sql,
+        [user_id, description, imageUrl, latitude, longitude, address],
+        (err, result) => {
+          if (err) {
+            console.error("DB Insert Error:", err);
+            return res.status(500).json({ error: "Database error" });
+          }
+
+          res.json({
+            message: "Report berhasil ditambahkan",
+            report_id: result.insertId,
+            image_url: imageUrl,
+          });
+        }
+      );
+    })
+    .catch((error) => {
+      console.error("ImgBB Upload Error:", error);
+      res.status(500).json({ error: "Upload image failed" });
+    });
 });
 
-module.exports = router;
+export default router;
