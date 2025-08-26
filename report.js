@@ -1,64 +1,57 @@
-import express from "express";
-import multer from "multer";
-import path from "path";
-import db from "./db.js"; // koneksi db callback style
-import imgbbUploader from "imgbb-uploader";
+const express = require("express");
+const multer = require("multer");
+const db = require("./db"); // karena db.js sejajar dengan report.js
+const imgbbUploader = require("imgbb-uploader");
 
 const router = express.Router();
 
-// Konfigurasi multer (buat simpan file di tmp sebelum diupload ke ImgBB)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage: storage });
+// pakai memoryStorage (supaya aman di Vercel, bukan simpan ke disk)
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Endpoint tambah report
 router.post("/", upload.single("image"), (req, res) => {
   const { user_id, description, latitude, longitude, address } = req.body;
   const imageFile = req.file;
 
-  if (!imageFile) {
-    return res.status(400).json({ error: "Image is required" });
+  if (!user_id || !description || !latitude || !longitude || !address || !imageFile) {
+    return res.status(400).json({ error: "Semua field wajib diisi termasuk image" });
   }
 
   // Upload ke ImgBB
   imgbbUploader({
     apiKey: process.env.IMGBB_API_KEY,
-    imagePath: imageFile.path,
+    base64string: imageFile.buffer.toString("base64"),
   })
     .then((response) => {
       const imageUrl = response.url;
 
-      const sql = `INSERT INTO reports 
-        (user_id, description, image_url, status, latitude, longitude, address, created_at) 
-        VALUES (?, ?, ?, 'pending', ?, ?, ?, NOW())`;
+      // Simpan ke DB pakai callback style dari db.js
+      const sql = `
+        INSERT INTO reports (user_id, description, latitude, longitude, address, img_url, status, created_at) 
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+      `;
 
       db.query(
         sql,
-        [user_id, description, imageUrl, latitude, longitude, address],
+        [user_id, description, latitude, longitude, address, imageUrl],
         (err, result) => {
           if (err) {
-            console.error("DB Insert Error:", err);
-            return res.status(500).json({ error: "Database error" });
+            console.error("DB error:", err);
+            return res.status(500).json({ error: "Gagal simpan laporan", detail: err.message });
           }
 
-          res.json({
-            message: "Report berhasil ditambahkan",
+          res.status(200).json({
+            success: true,
+            message: "Laporan berhasil dikirim",
             report_id: result.insertId,
             image_url: imageUrl,
           });
         }
       );
     })
-    .catch((error) => {
-      console.error("ImgBB Upload Error:", error);
-      res.status(500).json({ error: "Upload image failed" });
+    .catch((err) => {
+      console.error("ImgBB error:", err);
+      res.status(500).json({ error: "Gagal upload ke ImgBB", detail: err.message });
     });
 });
 
-export default router;
+module.exports = router;
