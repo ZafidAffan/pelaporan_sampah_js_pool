@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
-import db from "../config/db.js"; // koneksi db callback style
+import db from ".db.js"; // koneksi db callback style
 import imgbbUploader from "imgbb-uploader";
 
 const router = express.Router();
