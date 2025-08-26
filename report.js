@@ -2,28 +2,35 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
+const multer = require('multer');
+const fs = require('fs');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-  try {
-    const { user_id, description, latitude, longitude, address, image } = req.body;
+// setup multer (simpan file di memori sementara)
+const upload = multer({ storage: multer.memoryStorage() });
 
-    // Cek semua field wajib
-    if (!user_id || !description || !latitude || !longitude || !address || !image) {
+router.post('/', upload.single('image'), async (req, res) => {
+  try {
+    const { user_id, description, latitude, longitude, address } = req.body;
+
+    // cek field
+    if (!user_id || !description || !latitude || !longitude || !address || !req.file) {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
-    // Ambil API key ImgBB
     const imgbbApiKey = process.env.IMGBB_API_KEY;
     if (!imgbbApiKey) {
       return res.status(500).json({ error: "IMGBB_API_KEY tidak ditemukan di environment" });
     }
 
-    // Upload gambar ke ImgBB
+    // convert file buffer ke base64
+    const imageBase64 = req.file.buffer.toString("base64");
+
+    // upload ke ImgBB
     const uploadResponse = await axios.post(
       `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
-      new URLSearchParams({ image }),
+      new URLSearchParams({ image: imageBase64 }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
@@ -33,16 +40,15 @@ router.post('/', async (req, res) => {
 
     const imageUrl = uploadResponse.data.data.url;
 
-    // Koneksi ke database Railway
+    // koneksi ke database
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
-      port: process.env.DB_PORT || 3306, // Railway biasanya kasih port custom
+      port: process.env.DB_PORT || 3306,
     });
 
-    // Insert ke tabel reports (pakai img_url sesuai DB kamu)
     const [result] = await connection.execute(
       `INSERT INTO reports (user_id, description, latitude, longitude, address, img_url, status, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
