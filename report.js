@@ -2,14 +2,17 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
+const multer = require('multer');
 
 const router = express.Router();
+const upload = multer(); // simpan file di memory (buffer)
 
-router.post('/', async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const { description, latitude, longitude, address, image } = req.body;
+    const { description, latitude, longitude, address } = req.body;
+    const imageFile = req.file;
 
-    if (!description || !latitude || !longitude || !address || !image) {
+    if (!description || !latitude || !longitude || !address || !imageFile) {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
@@ -18,10 +21,13 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: "IMGBB_API_KEY tidak ditemukan di environment" });
     }
 
+    // Convert buffer file → base64 string
+    const base64Image = imageFile.buffer.toString("base64");
+
     // Upload ke ImgBB
     const uploadResponse = await axios.post(
       `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
-      new URLSearchParams({ image }),
+      new URLSearchParams({ image: base64Image }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
