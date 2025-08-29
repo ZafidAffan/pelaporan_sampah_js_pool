@@ -11,6 +11,7 @@
     "mysql2": "^3.3.3",
     "multer": "1.4.5-lts.1",
     "axios": "^1.6.0",
-    "imgbb-uploader": "^1.5.1"
+    "imgbb-uploader": "^1.5.1",
+    "express-session": "^1.17.3"
   }
 }
