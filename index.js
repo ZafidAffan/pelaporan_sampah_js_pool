@@ -14,6 +14,7 @@ app.use('/user', require('./get_user'));
 app.use('/user-report', require('./get_user_report'));
 
 app.use('/admin', require('./admin_login'));
+app.use('/admin', require('./admin_register'));
 
 // Export app ke Vercel
 module.exports = app;
