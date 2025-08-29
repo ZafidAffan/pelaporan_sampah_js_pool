@@ -2,7 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt'); // untuk verifikasi password hash
 const session = require('express-session');
-const pool = require('./config/db'); // gunakan db.js kamu
+const pool = require('./db'); // gunakan db.js kamu
 
 const router = express.Router();
 
