@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 8080;
+const path = require('path');
 
 app.use(express.json());
 app.use('/upload', express.static('upload'));
@@ -16,5 +17,9 @@ app.use('/user-report', require('./get_user_report'));
 app.use('/admin', require('./admin_login'));
 app.use('/admin', require('./admin_register'));
 
+// route untuk serve file HTML
+app.get('/admin-login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin_login.html'));
+});
 // Export app ke Vercel
 module.exports = app;
