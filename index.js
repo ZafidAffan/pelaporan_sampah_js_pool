@@ -17,9 +17,13 @@ app.use('/user-report', require('./get_user_report'));
 app.use('/admin', require('./admin_login'));
 app.use('/admin', require('./admin_register'));
 
-// route untuk serve file HTML
-app.get('/admin-login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin_login.html'));
-});
+// contoh route untuk serve file HTML kalo ga di satuin di folder public
+// app.get('/admin-login', (req, res) => {
+//  res.sendFile(path.join(__dirname, 'admin_login.html'));
+// });
+
+// route untuk menjalankan semua html di folder public
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Export app ke Vercel
 module.exports = app;
