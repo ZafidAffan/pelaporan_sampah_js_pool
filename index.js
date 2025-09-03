@@ -16,6 +16,7 @@ app.use('/user-report', require('./get_user_report'));
 
 app.use('/admin', require('./admin_login'));
 app.use('/admin', require('./admin_register'));
+app.use('/admin', require('./admin_dashboard'));  
 
 // contoh route untuk serve file HTML kalo ga di satuin di folder public
 // app.get('/admin-login', (req, res) => {
