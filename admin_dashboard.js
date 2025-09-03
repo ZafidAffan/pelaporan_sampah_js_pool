@@ -1,17 +1,8 @@
 const express = require('express');
-const mysql = require('mysql2/promise');
 const path = require('path');
+const pool = require('./db'); // pakai koneksi dari db.js
 
 const router = express.Router();
-
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',   // sesuaikan
-  database: 'pelaporan_sampah',
-  socketPath: '/tmp/mysql.sock',
-  port: 3306
-});
 
 // middleware cek login admin
 function isAdminLoggedIn(req, res, next) {
@@ -21,12 +12,12 @@ function isAdminLoggedIn(req, res, next) {
   next();
 }
 
-// route dashboard (kirim HTML)
+// route dashboard (tampilkan HTML)
 router.get('/dashboard', isAdminLoggedIn, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html'));
 });
 
-// API tambahan buat ambil data dashboard
+// API untuk ambil data dashboard
 router.get('/dashboard-data', isAdminLoggedIn, async (req, res) => {
   try {
     const conn = await pool.getConnection();
