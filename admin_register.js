@@ -1,51 +1,47 @@
-// routes/admin_register.js
 const express = require("express");
 const bcrypt = require("bcrypt");
-const pool = require("./db"); // pakai db.js kamu
+const pool = require("./db");
 
 const router = express.Router();
 
-// Register Admin
 router.post("/", (req, res) => {
   const { name, email, password, confirm } = req.body;
 
-  // Validasi input
   if (!name || !email || !password || !confirm) {
     return res.status(400).json({ success: false, message: "Semua kolom wajib diisi." });
   }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ success: false, message: "Format email tidak valid." });
   }
-
   if (password !== confirm) {
     return res.status(400).json({ success: false, message: "Konfirmasi password tidak cocok." });
   }
 
-  // Cek apakah email sudah dipakai
-  pool.query("SELECT admin_id FROM admin WHERE email = ?", [email], async (err, results) => {
+  // cek email
+  pool.query("SELECT admin_id FROM admin WHERE email = ?", [email], (err, rows) => {
     if (err) {
       console.error("DB error:", err);
-      return res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
+      return res.status(500).json({ success: false, message: "Terjadi kesalahan koneksi" });
     }
 
-    if (results.length > 0) {
+    if (rows.length > 0) {
       return res.status(400).json({ success: false, message: "Email sudah terdaftar." });
     }
 
-    try {
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+    // hash password lalu insert
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error("Hash error:", err);
+        return res.status(500).json({ success: false, message: "Gagal memproses password" });
+      }
 
-      // Simpan admin baru
       pool.query(
         "INSERT INTO admin (name, email, password) VALUES (?, ?, ?)",
         [name, email, hashedPassword],
         (err, result) => {
           if (err) {
-            console.error("DB insert error:", err);
-            return res.status(500).json({ success: false, message: "Gagal menyimpan data." });
+            console.error("Insert error:", err);
+            return res.status(500).json({ success: false, message: "Terjadi kesalahan koneksi" });
           }
 
           return res.status(201).json({
@@ -55,10 +51,7 @@ router.post("/", (req, res) => {
           });
         }
       );
-    } catch (error) {
-      console.error("Hash error:", error);
-      return res.status(500).json({ success: false, message: "Terjadi kesalahan server." });
-    }
+    });
   });
 });
 
