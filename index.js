@@ -17,24 +17,15 @@ app.use('/user-report', require('./get_user_report'));
 app.use('/admin', require('./admin_login'));
 app.use('/admin', require('./admin_register'));
 app.use('/admin', require('./admin_dashboard'));  
+app.use('/admin', require('./admin_laporan'));
+
 
 // contoh route untuk serve file HTML kalo ga di satuin di folder public
 // app.get('/admin-login', (req, res) => {
 //  res.sendFile(path.join(__dirname, 'admin_login.html'));
 // });
 
-// ✅ tambahkan route API laporan
-app.get('/admin/laporan', async (req, res) => {
-  try {
-    const [rows] = await mysql.query(
-      'SELECT * FROM reports ORDER BY created_at DESC'
-    );
-    res.json(rows); // ini yg dipakai fetch() di admin_laporan.html
-  } catch (err) {
-    console.error('Error ambil laporan:', err);
-    res.status(500).json({ error: 'Gagal mengambil data laporan' });
-  }
-});
+
 
 // route untuk menjalankan semua html di folder public
 app.use(express.static(path.join(__dirname, 'public')));
