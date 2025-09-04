@@ -117,28 +117,28 @@
 <script>
   async function loadReports() {
     try {
-      const res = await fetch("/admin/laporan"); // endpoint dari admin_laporan.js
-      const data = await res.json();
+      const res = await fetch("/admin/laporan"); // backend harus return array JSON
+      const reports = await res.json();
 
       const tbody = document.getElementById("report-body");
       tbody.innerHTML = "";
 
-      if (data.length === 0) {
+      if (!reports || reports.length === 0) {
         tbody.innerHTML = "<tr><td colspan='9'>Belum ada laporan.</td></tr>";
         return;
       }
 
-      data.forEach(r => {
+      reports.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${r.report_id}</td>
           <td>${r.user_id}</td>
           <td>${r.description}</td>
-          <td>${r.img_url ? `<img src="/upload/${r.img_url}" alt="bukti">` : "Tidak ada"}</td>
-          <td>${r.latitude}</td>
-          <td>${r.longitude}</td>
-          <td>${r.address}</td>
-          <td>${r.status}</td>
+          <td>${r.img_url ? `<img src="${r.img_url}" alt="bukti">` : "Tidak ada"}</td>
+          <td>${r.latitude || "-"}</td>
+          <td>${r.longitude || "-"}</td>
+          <td>${r.address || "-"}</td>
+          <td>${r.status || "pending"}</td>
           <td>${new Date(r.created_at).toLocaleString()}</td>
         `;
         tbody.appendChild(tr);
