@@ -1,26 +1,31 @@
-// admin_laporan.js
-const express = require("express");
-const pool = require("./db"); // koneksi MySQL
-const router = express.Router();
+<script>
+  async function loadReports() {
+    try {
+      const res = await fetch("/admin/laporan");
+      const data = await res.json();
 
-// halaman daftar laporan
-router.get("/", async (req, res) => {
-  try {
-    // ambil semua laporan
-    const [rows] = await pool.query("SELECT * FROM reports ORDER BY report_id DESC");
+      if (data.success) {
+        const table = document.getElementById("reportTable");
+        table.innerHTML = "";
 
-    // ambil data admin dari session (simulasi)
-    const adminName = req.session?.admin_name || "Admin";
-
-    res.render("admin_laporan", {
-      currentPage: "admin_laporan",
-      adminName,
-      reports: rows
-    });
-  } catch (err) {
-    console.error("DB error:", err);
-    res.status(500).send("Terjadi kesalahan koneksi database.");
+        data.reports.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.report_id}</td>
+            <td>${r.description}</td>
+            <td>${r.status}</td>
+            <td>${new Date(r.created_at).toLocaleString()}</td>
+          `;
+          table.appendChild(tr);
+        });
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memuat laporan.");
+    }
   }
-});
 
-module.exports = router;
+  loadReports();
+</script>
