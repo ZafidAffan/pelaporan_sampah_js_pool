@@ -120,6 +120,9 @@
       const res = await fetch("/admin/laporan"); // backend harus return array JSON
       const reports = await res.json();
 
+      console.log("Isi response dari backend:", reports);
+      console.log("Tipe data:", Array.isArray(reports) ? "ARRAY ✅" : "OBJECT ❌");
+
       const tbody = document.getElementById("report-body");
       tbody.innerHTML = "";
 
