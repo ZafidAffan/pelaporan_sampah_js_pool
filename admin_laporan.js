@@ -1,6 +1,6 @@
 // admin_laporan.js
 const express = require("express");
-const pool = require("./db"); // koneksi mysql2/promise
+const pool = require("./db_promise_asyncawait"); // koneksi mysql2/promise
 const router = express.Router();
 
 // GET /admin/laporan
