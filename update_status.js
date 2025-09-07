@@ -1,6 +1,6 @@
 // update_status.js
 const express = require("express");
-const pool = require("./db_promise"); // pakai yang promise biar bisa async/await
+const pool = require("./db_promise_asyncawait"); // pakai yang promise biar bisa async/await
 const router = express.Router();
 
 // POST /admin/update-status
