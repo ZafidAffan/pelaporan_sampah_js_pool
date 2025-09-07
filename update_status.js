@@ -1,9 +1,13 @@
-// update_status.js
-const express = require("express");
-const pool = require("./db_promise_asyncawait"); // pakai yang promise biar bisa async/await
+import express from "express";
+import pool from "./db_promise-asyncawait";
+
 const router = express.Router();
 
-// POST /admin/update-status
+/**
+ * Endpoint untuk menerima / menolak laporan
+ * Body: { report_id, status }
+ * status bisa: 'diterima' atau 'ditolak'
+ */
 router.post("/update-status", async (req, res) => {
   try {
     const { report_id, status } = req.body;
@@ -17,15 +21,15 @@ router.post("/update-status", async (req, res) => {
       [status, report_id]
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Laporan tidak ditemukan" });
+    if (result.affectedRows > 0) {
+      res.json({ message: "Status laporan berhasil diperbarui" });
+    } else {
+      res.status(404).json({ error: "Laporan tidak ditemukan" });
     }
-
-    res.json({ success: true, message: `Status laporan #${report_id} diubah menjadi ${status}` });
   } catch (err) {
-    console.error("❌ Gagal update status:", err);
+    console.error("Error update status laporan:", err.message);
     res.status(500).json({ error: "Gagal update status laporan" });
   }
 });
 
-module.exports = router;
+export default router;
