@@ -9,7 +9,11 @@
       font-family: Arial, sans-serif;
       background-color: #F5F0CD;
       margin: 0;
+      padding: 0;
+      color: #333;
     }
+
+    /* ==== NAVIGATION ==== */
     nav {
       background-color: #347433;
       display: flex;
@@ -19,11 +23,13 @@
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
     }
+
     .nav-links {
       display: flex;
       gap: 12px;
       align-items: center;
     }
+
     nav a {
       color: white;
       text-decoration: none;
@@ -31,27 +37,35 @@
       padding: 8px 16px;
       border-radius: 8px;
     }
+
     nav a:hover,
     nav a.active {
       background-color: #285f28;
     }
+
     .logout-btn {
       background-color: #b72e2e;
       padding: 8px 14px;
       border-radius: 8px;
     }
+
     .welcome {
       color: white;
       font-weight: bold;
       margin-right: 16px;
     }
+
+    /* ==== CONTENT CONTAINER ==== */
     .container {
       padding: 20px;
     }
+
     h1 {
       color: #347433;
       text-align: center;
     }
+
+    /* ==== TABLE ==== */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -59,22 +73,44 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 12px;
       overflow: hidden;
+      margin-top: 20px;
     }
+
     th {
       background-color: #347433;
       color: white;
       padding: 12px;
-      text-align: left;
+      text-align: center;      /* rata tengah biar seragam */
+      vertical-align: middle;
     }
+
     td {
-      padding: 10px;
+      padding: 12px;
       border-bottom: 1px solid #ddd;
-      vertical-align: top;
+      text-align: center;      /* horizontal center */
+      vertical-align: middle;  /* vertical center */
+      font-size: 14px;
     }
-    img {
+
+    /* alternating row biar lebih enak dibaca */
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    /* ==== IMAGE STYLE ==== */
+    td img {
       max-width: 100px;
+      height: auto;
       border-radius: 8px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto; /* center horizontal */
     }
+
   </style>
 </head>
 <body>
