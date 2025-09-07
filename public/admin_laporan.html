@@ -258,7 +258,7 @@
     selectedReportId = null;
   }
   async function loadPetugas() {
-    const res = await fetch("/admin/petugas");
+    const res = await fetch("/admin/get-petugas"); // ✅ disesuaikan
     const petugas = await res.json();
     const select = document.getElementById("selectPetugas");
     select.innerHTML = "";
