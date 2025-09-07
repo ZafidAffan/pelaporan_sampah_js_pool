@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "./db_promise-asyncawait";
+import pool from "./db_promise_asyncawait";
 
 const router = express.Router();
 
