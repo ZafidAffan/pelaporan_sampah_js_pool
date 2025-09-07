@@ -23,13 +23,11 @@
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
     }
-
     .nav-links {
       display: flex;
       gap: 12px;
       align-items: center;
     }
-
     nav a {
       color: white;
       text-decoration: none;
@@ -37,18 +35,15 @@
       padding: 8px 16px;
       border-radius: 8px;
     }
-
     nav a:hover,
     nav a.active {
       background-color: #285f28;
     }
-
     .logout-btn {
       background-color: #b72e2e;
       padding: 8px 14px;
       border-radius: 8px;
     }
-
     .welcome {
       color: white;
       font-weight: bold;
@@ -59,7 +54,6 @@
     .container {
       padding: 20px;
     }
-
     h1 {
       color: #347433;
       text-align: center;
@@ -75,42 +69,67 @@
       overflow: hidden;
       margin-top: 20px;
     }
-
     th {
       background-color: #347433;
       color: white;
       padding: 12px;
-      text-align: center;      /* rata tengah biar seragam */
+      text-align: center;
       vertical-align: middle;
     }
-
     td {
       padding: 12px;
-      border-bottom: 1px solid #ddd;
-      text-align: center;      /* horizontal center */
-      vertical-align: middle;  /* vertical center */
+      border: 1px solid #ddd;
+      text-align: center;
+      vertical-align: middle;
       font-size: 14px;
     }
-
-    /* alternating row biar lebih enak dibaca */
     tr:nth-child(even) {
       background-color: #f9f9f9;
     }
-
     tr:hover {
       background-color: #f1f1f1;
     }
-
-    /* ==== IMAGE STYLE ==== */
     td img {
       max-width: 100px;
       height: auto;
       border-radius: 8px;
       object-fit: cover;
       display: block;
-      margin: 0 auto; /* center horizontal */
+      margin: 0 auto;
     }
 
+    /* ==== BUTTON ==== */
+    .btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin: 2px;
+      color: white;
+    }
+    .btn-accept { background: #347433; }
+    .btn-reject { background: #b72e2e; }
+    .btn-assign { background: #3674B5; }
+    .btn-confirm { background: #ff9800; }
+
+    /* ==== MODAL ==== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 400px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -142,33 +161,61 @@
         <th>Alamat</th>
         <th>Status</th>
         <th>Dibuat</th>
+        <th>Aksi</th>
       </tr>
     </thead>
     <tbody id="report-body">
-      <tr><td colspan="9">Loading...</td></tr>
+      <tr><td colspan="10">Loading...</td></tr>
     </tbody>
   </table>
 </div>
 
+<!-- Modal pilih petugas -->
+<div class="modal" id="modalPetugas">
+  <div class="modal-content">
+    <h3>Pilih Petugas</h3>
+    <select id="selectPetugas"></select>
+    <br><br>
+    <button class="btn btn-assign" onclick="confirmAssign()">Kirim</button>
+    <button class="btn btn-reject" onclick="closeModal()">Batal</button>
+  </div>
+</div>
+
 <script>
+  let selectedReportId = null;
+
   async function loadReports() {
     try {
-      const res = await fetch("/admin/laporan"); // backend harus return array JSON
+      const res = await fetch("/admin/laporan");
       const reports = await res.json();
-
-      console.log("Isi response dari backend:", reports);
-      console.log("Tipe data:", Array.isArray(reports) ? "ARRAY ✅" : "OBJECT ❌");
 
       const tbody = document.getElementById("report-body");
       tbody.innerHTML = "";
 
       if (!reports || reports.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='9'>Belum ada laporan.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='10'>Belum ada laporan.</td></tr>";
         return;
       }
 
       reports.forEach(r => {
         const tr = document.createElement("tr");
+        let aksiBtn = "";
+
+        if (r.status === "pending") {
+          aksiBtn = `
+            <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'accepted')">Terima</button>
+            <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'rejected')">Tolak</button>
+          `;
+        } else if (r.status === "accepted") {
+          aksiBtn = `
+            <button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>
+          `;
+        } else if (r.status === "proses") {
+          aksiBtn = `
+            <button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>
+          `;
+        }
+
         tr.innerHTML = `
           <td>${r.report_id}</td>
           <td>${r.user_id}</td>
@@ -179,14 +226,74 @@
           <td>${r.address || "-"}</td>
           <td>${r.status || "pending"}</td>
           <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td>${aksiBtn}</td>
         `;
         tbody.appendChild(tr);
       });
     } catch (err) {
       console.error(err);
       document.getElementById("report-body").innerHTML =
-        "<tr><td colspan='9'>Gagal memuat data laporan.</td></tr>";
+        "<tr><td colspan='10'>Gagal memuat data laporan.</td></tr>";
     }
+  }
+
+  async function updateStatus(reportId, status) {
+    const res = await fetch("/admin/update-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report_id: reportId, status })
+    });
+    const data = await res.json();
+    alert(data.message || data.error);
+    loadReports();
+  }
+
+  function openModal(reportId) {
+    selectedReportId = reportId;
+    document.getElementById("modalPetugas").style.display = "flex";
+    loadPetugas();
+  }
+  function closeModal() {
+    document.getElementById("modalPetugas").style.display = "none";
+    selectedReportId = null;
+  }
+  async function loadPetugas() {
+    const res = await fetch("/admin/petugas");
+    const petugas = await res.json();
+    const select = document.getElementById("selectPetugas");
+    select.innerHTML = "";
+    petugas.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.petugas_id;
+      opt.textContent = `${p.petugas_id} - ${p.nama}`;
+      select.appendChild(opt);
+    });
+  }
+  async function confirmAssign() {
+    const petugasId = document.getElementById("selectPetugas").value;
+    if (!selectedReportId || !petugasId) return;
+    const res = await fetch("/admin/assign-task", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report_id: selectedReportId, petugas_id: petugasId })
+    });
+    const data = await res.json();
+    alert(data.message || data.error);
+    closeModal();
+    loadReports();
+  }
+
+  async function confirmDone(reportId) {
+    const keterangan = prompt("Masukkan keterangan bukti:");
+    if (!keterangan) return;
+    const formData = new FormData();
+    formData.append("report_id", reportId);
+    formData.append("keterangan", keterangan);
+    // TODO: handle file upload input di versi lengkap
+    const res = await fetch("/admin/confirm-done", { method: "POST", body: formData });
+    const data = await res.json();
+    alert(data.message || data.error);
+    loadReports();
   }
 
   loadReports();
