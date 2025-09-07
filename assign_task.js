@@ -1,6 +1,6 @@
 // assign_task.js
 const express = require("express");
-const pool = require("./db_promise");
+const pool = require("./db_promise_asyncawait");
 const router = express.Router();
 
 router.post("/assign-task", async (req, res) => {
