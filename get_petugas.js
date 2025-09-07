@@ -1,6 +1,6 @@
 // routes/get_petugas.js
 const express = require("express");
-const pool = require("./db_promise");
+const pool = require("./db_promise_asyncawait");
 const router = express.Router();
 
 // ✅ Ambil semua daftar petugas
