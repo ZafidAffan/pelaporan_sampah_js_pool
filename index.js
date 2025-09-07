@@ -19,6 +19,11 @@ app.use('/admin', require('./admin_register'));
 app.use('/admin', require('./admin_dashboard'));  
 app.use('/admin', require('./admin_laporan'));
 
+// === ROUTES ADMIN TAMBAHAN (STATUS & TUGAS) ===
+app.use('/admin', require('./update_status'));   // menerima/menolak laporan
+app.use('/admin', require('./assign_task'));     // assign tugas ke petugas
+app.use('/admin', require('./confirm_done'));    // konfirmasi selesai
+app.use('/admin', require('./get_petugas'));     // ambil daftar petugas untuk popup
 
 // contoh route untuk serve file HTML kalo ga di satuin di folder public
 // app.get('/admin-login', (req, res) => {
