@@ -1,5 +1,5 @@
-import express from "express";
-import pool from "./db_promise_asyncawait";
+const express = require("express");
+const pool = require("./db_promise-asyncawait");
 
 const router = express.Router();
 
@@ -32,4 +32,4 @@ router.post("/update-status", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
