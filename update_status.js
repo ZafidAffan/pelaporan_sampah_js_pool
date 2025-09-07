@@ -1,5 +1,5 @@
 const express = require("express");
-const pool = require("./db_promise-asyncawait");
+const pool = require("./db_promise_asyncawait");
 
 const router = express.Router();
 
