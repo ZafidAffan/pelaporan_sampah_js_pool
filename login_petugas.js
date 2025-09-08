@@ -1,14 +1,12 @@
-// routes/login_petugas.js
 const express = require("express");
 const pool = require("./db_promise_asyncawait");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 
-// LOGIN PETUGAS
+// HANYA pakai "/" karena sudah di-mount di index.js
 router.post("/", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ error: "Email dan password wajib diisi" });
     }
@@ -18,16 +16,12 @@ router.post("/", async (req, res) => {
       [email]
     );
 
-    if (rows.length === 0) {
-      return res.status(401).json({ error: "Email tidak ditemukan" });
-    }
+    if (rows.length === 0) return res.status(401).json({ error: "Email tidak ditemukan" });
 
     const petugas = rows[0];
     const validPassword = await bcrypt.compare(password, petugas.password);
 
-    if (!validPassword) {
-      return res.status(401).json({ error: "Password salah" });
-    }
+    if (!validPassword) return res.status(401).json({ error: "Password salah" });
 
     res.json({
       message: "Login berhasil",
