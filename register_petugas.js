@@ -5,7 +5,7 @@ const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/aw
 const router = express.Router();
 
 // ✅ Endpoint register petugas
-router.post("/register-petugas", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
