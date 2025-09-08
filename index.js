@@ -27,7 +27,7 @@ app.use('/admin', require('./get_petugas'));     // ambil daftar petugas untuk p
 
 // === ROUTES PETUGAS ===
 
-app.use('/', require('./login_petugas'));
+app.use('/login-petugas', require('./login_petugas'));
 app.use('/register-petugas', require('./register_petugas'));
 
 
