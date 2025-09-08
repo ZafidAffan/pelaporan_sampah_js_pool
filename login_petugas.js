@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs"); // buat cek password hash
 const router = express.Router();
 
 // === LOGIN PETUGAS === sengaja say tambahkan /login-petugas nya disini bukan di index
-router.post("/login-petugas", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { email, password } = req.body;
 
