@@ -1,10 +1,9 @@
-// routes/register_petugas.js
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/await
+const pool = require("./db_promise_asyncawait"); // koneksi MySQL async/await
 const router = express.Router();
 
-// ✅ Endpoint register petugas
+// Endpoint register petugas
 router.post("/", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -13,12 +12,11 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
-    // Cek email sudah terdaftar atau belum
+    // Cek email sudah terdaftar
     const [existing] = await pool.query(
       "SELECT petugas_id FROM petugas WHERE email = ?",
       [email]
     );
-
     if (existing.length > 0) {
       return res.status(400).json({ error: "Email sudah terdaftar" });
     }
@@ -38,11 +36,12 @@ router.post("/", async (req, res) => {
       name: name,
       status_bertugas: "tidak bertugas",
     });
+
   } catch (err) {
     console.error("❌ Error register petugas:", err);
     res.status(500).json({
       error: "Gagal registrasi petugas",
-      detail: err.message, // kirim detail error agar mudah debugging
+      detail: err.message,
     });
   }
 });
