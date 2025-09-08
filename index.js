@@ -29,6 +29,7 @@ app.use('/admin', require('./get_petugas'));     // ambil daftar petugas untuk p
 
 app.use('/login-petugas', require('./login_petugas'));
 app.use('/register-petugas', require('./register_petugas'));
+app.use('/get-petugas', require('./get_petugas'));
 
 
 // contoh route untuk serve file HTML kalo ga di satuin di folder public
