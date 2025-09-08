@@ -14,6 +14,12 @@ app.use('/report-status', require('./get_report_status'));
 app.use('/user', require('./get_user'));
 app.use('/user-report', require('./get_user_report'));
 
+// === ROUTES PETUGAS ===
+
+app.use('/login_petugas', require('./login_petugas')); // sengaja saya tambahin /login-petugasnya di login_petugas.js, biar tau bedanya dan fungsinya
+app.use('/register-petugas', require('./register_petugas'));
+app.use('/get-tugas', require('./get_tugas'));
+
 app.use('/admin', require('./admin_login'));
 app.use('/admin', require('./admin_register'));
 app.use('/admin', require('./admin_dashboard'));  
@@ -25,11 +31,7 @@ app.use('/admin', require('./assign_task'));     // assign tugas ke petugas
 app.use('/admin', require('./confirm_done'));    // konfirmasi selesai
 app.use('/admin', require('./get_petugas'));     // ambil daftar petugas untuk popup
 
-// === ROUTES PETUGAS ===
 
-app.use('/login_petugas', require('./login_petugas')); // sengaja saya tambahin /login-petugasnya di login_petugas.js, biar tau bedanya dan fungsinya
-app.use('/register-petugas', require('./register_petugas'));
-app.use('/get-tugas', require('./get_tugas'));
 
 
 // contoh route untuk serve file HTML kalo ga di satuin di folder public
