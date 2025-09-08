@@ -26,8 +26,8 @@ app.use('/admin', require('./confirm_done'));    // konfirmasi selesai
 app.use('/admin', require('./get_petugas'));     // ambil daftar petugas untuk popup
 
 // === ROUTES PETUGAS ===
-app.use('/', require('./login_petugas'));       // login petugas
-app.use('/', require('./register_petugas'));    // register petugas
+app.use('/login-petugas', require('./login_petugas'));
+app.use('/register-petugas', require('./register_petugas'));
 
 // contoh route untuk serve file HTML kalo ga di satuin di folder public
 // app.get('/admin-login', (req, res) => {
