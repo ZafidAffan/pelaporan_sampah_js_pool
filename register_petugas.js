@@ -4,8 +4,8 @@ const bcrypt = require("bcryptjs");
 const pool = require("./db_promise_asyncawait");
 const router = express.Router();
 
-// ✅ Endpoint register petugas
-router.post("/register-petugas", async (req, res) => {
+// REGISTER PETUGAS
+router.post("/", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
@@ -13,7 +13,7 @@ router.post("/register-petugas", async (req, res) => {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
-    // Cek email sudah terdaftar atau belum
+    // Cek email sudah terdaftar
     const [existing] = await pool.query(
       "SELECT petugas_id FROM petugas WHERE email = ?",
       [email]
