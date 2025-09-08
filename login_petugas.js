@@ -4,7 +4,7 @@ const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/aw
 const bcrypt = require("bcryptjs"); // buat cek password hash
 const router = express.Router();
 
-// === LOGIN PETUGAS ===
+// === LOGIN PETUGAS === sengaja say tambahkan /login-petugas nya disini bukan di index
 router.post("/login-petugas", async (req, res) => {
   try {
     const { email, password } = req.body;
