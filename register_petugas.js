@@ -27,7 +27,7 @@ router.post("/", async (req, res) => {
     // Simpan ke database
     const [result] = await pool.query(
       "INSERT INTO petugas (name, email, phone, password, tugas_selesai, status_bertugas) VALUES (?, ?, ?, ?, ?, ?)",
-      [name, email, phone, hashedPassword, 0, "tidak bertugas"]
+      [name, email, phone, hashedPassword, 0, "tidak"]
     );
 
     res.status(201).json({
