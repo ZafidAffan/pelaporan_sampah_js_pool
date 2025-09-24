@@ -1,10 +1,21 @@
 // routes/login_petugas.js
 const express = require("express");
 const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/await
-const bcrypt = require("bcryptjs"); // buat cek password hash
+const bcrypt = require("bcryptjs");
+const cors = require("cors"); // cara kedua dalam mengatasi masalah CORS
+
 const router = express.Router();
 
-// === LOGIN PETUGAS === sengaja say tambahkan /login-petugas nya disini bukan di index
+// Middleware CORS khusus route ini
+router.use(
+  cors({
+    origin: "*", // boleh diatur ke domain frontend Anda, contoh: "http://localhost:3000"
+    methods: ["POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// === LOGIN PETUGAS ===
 router.post("/", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,7 +58,7 @@ router.post("/", async (req, res) => {
     console.error("❌ Error login petugas:", err);
     res.status(500).json({
       error: "Gagal login petugas",
-      detail: err.message, // kirim detail error untuk debugging
+      detail: err.message,
     });
   }
 });
