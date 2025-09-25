@@ -2,7 +2,7 @@
 const express = require("express");
 const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/await
 const bcrypt = require("bcryptjs");
-const cors = require("cors"); // cara kedua dalam mengatasi masalah CORS
+const cors = require("cors"); // cara lain dalam mengatasi masalah CORS
 
 const router = express.Router();
 
