@@ -1,51 +1,64 @@
-const express = require('express');
+// routes/login_petugas.js
+const express = require("express");
+const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/await
+const bcrypt = require("bcryptjs");
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const db = require('./db'); // pool dari db.js
 
-// CORS middleware
+// Middleware CORS (kalau belum di-global di server.js)
 router.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next(); // ✅ penting, jangan lupa
 });
 
-// POST /login
-router.post('/', (req, res) => {
-  const { email, password } = req.body;
+// === LOGIN PETUGAS ===
+router.post("/", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Kolom email dan password wajib diisi' });
-  }
-
-  const sql = "SELECT user_id, password, name FROM user WHERE email = ?";
-  db.query(sql, [email], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: 'SQL Error: ' + err.message });
+    // Validasi input
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email dan password wajib diisi" });
     }
 
-    if (results.length === 0) {
-      return res.status(401).json({ error: 'Email tidak ditemukan' });
+    // Cek apakah email petugas ada di database
+    const [rows] = await pool.query(
+      "SELECT petugas_id, name, email, phone, password, tugas_selesai, status_bertugas FROM petugas WHERE email = ?",
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: "Email tidak ditemukan" });
     }
 
-    const user = results[0];
+    const petugas = rows[0];
 
-    bcrypt.compare(password, user.password, (err, match) => {
-      if (err) return res.status(500).json({ error: 'Error bcrypt: ' + err.message });
+    // Cocokkan password
+    const validPassword = await bcrypt.compare(password, petugas.password);
 
-      if (!match) {
-        return res.status(401).json({ error: 'Password salah' });
-      }
+    if (!validPassword) {
+      return res.status(401).json({ error: "Password salah" });
+    }
 
-      res.json({
-        message: 'Login berhasil',
-        userId: user.user_id,
-        displayName: user.name
-      });
+    // Kirim response login berhasil
+    res.json({
+      message: "Login berhasil",
+      petugasId: petugas.petugas_id,
+      name: petugas.name,
+      email: petugas.email,
+      phone: petugas.phone,
+      tugas_selesai: petugas.tugas_selesai,
+      status_bertugas: petugas.status_bertugas,
     });
-  });
+  } catch (err) {
+    console.error("❌ Error login petugas:", err);
+    res.status(500).json({
+      error: "Gagal login petugas",
+      detail: err.message,
+    });
+  }
 });
 
 module.exports = router;
