@@ -6,14 +6,7 @@ const cors = require("cors"); // cara lain dalam mengatasi masalah CORS
 
 const router = express.Router();
 
-// Middleware CORS khusus route ini
-router.use(
-  cors({
-    origin: "*", // boleh diatur ke domain frontend Anda, contoh: "http://localhost:3000"
-    methods: ["POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+
 
 // === LOGIN PETUGAS ===
 router.post("/", async (req, res) => {
