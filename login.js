@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
 
     // Cek apakah email petugas ada di database
     const [rows] = await pool.query(
-      "SELECT petugas_id, name, email, phone, password, tugas_selesai, status_bertugas FROM petugas WHERE email = ?",
+      "SELECT petugas_id, name, email, phone, password, tugas_selesai, status_bertugas FROM user WHERE email = ?",
       [email]
     );
 
