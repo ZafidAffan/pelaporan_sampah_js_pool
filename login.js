@@ -1,4 +1,4 @@
-// routes/login_petugas.js
+// routes/login.js
 const express = require("express");
 const pool = require("./db_promise_asyncawait"); // koneksi MySQL pakai async/await
 const bcrypt = require("bcryptjs");
@@ -10,10 +10,10 @@ router.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   if (req.method === "OPTIONS") return res.sendStatus(200);
-  next(); // ✅ penting, jangan lupa
+  next();
 });
 
-// === LOGIN PETUGAS ===
+// === LOGIN USER ===
 router.post("/", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -23,9 +23,9 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Email dan password wajib diisi" });
     }
 
-    // Cek apakah email petugas ada di database
+    // Cek apakah email user ada di database
     const [rows] = await pool.query(
-      "SELECT petugas_id, name, email, phone, password, tugas_selesai, status_bertugas FROM petugas WHERE email = ?",
+      "SELECT user_id, name, email, phone, password FROM user WHERE email = ?",
       [email]
     );
 
@@ -33,10 +33,10 @@ router.post("/", async (req, res) => {
       return res.status(401).json({ error: "Email tidak ditemukan" });
     }
 
-    const petugas = rows[0];
+    const user = rows[0];
 
     // Cocokkan password
-    const validPassword = await bcrypt.compare(password, petugas.password);
+    const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return res.status(401).json({ error: "Password salah" });
@@ -45,17 +45,15 @@ router.post("/", async (req, res) => {
     // Kirim response login berhasil
     res.json({
       message: "Login berhasil",
-      petugasId: petugas.petugas_id,
-      name: petugas.name,
-      email: petugas.email,
-      phone: petugas.phone,
-      tugas_selesai: petugas.tugas_selesai,
-      status_bertugas: petugas.status_bertugas,
+      userId: user.user_id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
     });
   } catch (err) {
-    console.error("❌ Error login petugas:", err);
+    console.error("❌ Error login user:", err);
     res.status(500).json({
-      error: "Gagal login petugas",
+      error: "Gagal login user",
       detail: err.message,
     });
   }
