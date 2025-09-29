@@ -8,12 +8,17 @@ router.get("/", async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      "SELECT * FROM tugas WHERE petugas_id = ?",
+      `SELECT tugas_id, report_id, petugas_id, status, assigned_at, 
+              completed_at, status_final, verified_by, verified_at
+       FROM tugas
+       WHERE petugas_id = ? 
+       ORDER BY assigned_at DESC`,
       [petugas_id]
     );
-    res.json(rows);
+
+    res.json({ tugas: rows }); // ✅ sesuai ekspektasi frontend
   } catch (err) {
-    console.error(err);
+    console.error("Error get tugas:", err);
     res.status(500).json({ error: "Gagal mengambil tugas" });
   }
 });
