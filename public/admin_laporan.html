@@ -242,17 +242,25 @@
   }
 
   async function loadPetugas() {
-    const res = await fetch("/admin/get-petugas");
-    const petugas = await res.json();
-    const select = document.getElementById("selectPetugas");
-    select.innerHTML = "";
-    petugas.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.petugas_id;
-      opt.textContent = `${p.nama} (${p.petugas_id})`;
-      select.appendChild(opt);
-    });
+    try {
+      const res = await fetch("/admin/get-petugas");
+      console.log("Response status:", res.status);
+      const petugas = await res.json();
+      console.log("Data petugas:", petugas);
+
+      const select = document.getElementById("selectPetugas");
+      select.innerHTML = "<option value=''>Pilih Petugas</option>";
+      petugas.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.petugas_id;
+        opt.textContent = `${p.nama} (${p.petugas_id})`;
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("❌ Error load petugas:", err);
+    }
   }
+
 
   async function confirmAssign() {
     const petugasId = document.getElementById("selectPetugas").value;
