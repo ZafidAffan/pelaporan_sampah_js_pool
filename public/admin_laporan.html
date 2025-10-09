@@ -171,19 +171,25 @@
         const tr = document.createElement("tr");
         let aksiBtn = "";
 
+        // 🔄 Tombol dinamis sesuai status
         if (r.status === "pending") {
           aksiBtn = `
             <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'proses')">Terima</button>
             <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'ditolak')">Tolak</button>
           `;
-        } else if (r.status === "proses") {
+        } 
+        else if (r.status === "proses") {
           aksiBtn = `
             <button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>
           `;
-        } else if (r.status === "dalam perjalanan") {
+        } 
+        else if (r.status === "dalam perjalanan") {
           aksiBtn = `
             <button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>
           `;
+        } 
+        else {
+          aksiBtn = "-";
         }
 
         tr.innerHTML = `
@@ -229,6 +235,7 @@
     document.getElementById("modalPetugas").style.display = "flex";
     loadPetugas();
   }
+
   function closeModal() {
     document.getElementById("modalPetugas").style.display = "none";
     selectedReportId = null;
@@ -253,7 +260,7 @@
     const res = await fetch("/admin/assign-task", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ report_id: selectedReportId, petugas_id: petugasId })
+      body: JSON.stringify({ report_id: selectedReportId, petugas_id: petugasId, status: "dalam perjalanan" })
     });
     const data = await res.json();
     alert(data.message || data.error);
