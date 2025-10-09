@@ -3,7 +3,6 @@ const express = require("express");
 const pool = require("./db_promise_asyncawait");
 const router = express.Router();
 
-// ✅ Ambil semua daftar petugas
 router.get("/get-petugas", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT petugas_id, nama, no_hp FROM petugas");
