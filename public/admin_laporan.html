@@ -13,7 +13,6 @@
       color: #333;
     }
 
-    /* ==== NAVIGATION ==== */
     nav {
       background-color: #347433;
       display: flex;
@@ -23,43 +22,15 @@
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
     }
-    .nav-links {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 8px;
-    }
-    nav a:hover,
-    nav a.active {
-      background-color: #285f28;
-    }
-    .logout-btn {
-      background-color: #b72e2e;
-      padding: 8px 14px;
-      border-radius: 8px;
-    }
-    .welcome {
-      color: white;
-      font-weight: bold;
-      margin-right: 16px;
-    }
+    .nav-links { display: flex; gap: 12px; align-items: center; }
+    nav a { color: white; text-decoration: none; font-weight: bold; padding: 8px 16px; border-radius: 8px; }
+    nav a:hover, nav a.active { background-color: #285f28; }
+    .logout-btn { background-color: #b72e2e; padding: 8px 14px; border-radius: 8px; }
+    .welcome { color: white; font-weight: bold; margin-right: 16px; }
 
-    /* ==== CONTENT CONTAINER ==== */
-    .container {
-      padding: 20px;
-    }
-    h1 {
-      color: #347433;
-      text-align: center;
-    }
+    .container { padding: 20px; }
+    h1 { color: #347433; text-align: center; }
 
-    /* ==== TABLE ==== */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -74,7 +45,6 @@
       color: white;
       padding: 12px;
       text-align: center;
-      vertical-align: middle;
     }
     td {
       padding: 12px;
@@ -83,12 +53,8 @@
       vertical-align: middle;
       font-size: 14px;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #f1f1f1;
-    }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #f1f1f1; }
     td img {
       max-width: 100px;
       height: auto;
@@ -98,7 +64,6 @@
       margin: 0 auto;
     }
 
-    /* ==== BUTTON ==== */
     .btn {
       padding: 6px 10px;
       border: none;
@@ -113,7 +78,6 @@
     .btn-assign { background: #3674B5; }
     .btn-confirm { background: #ff9800; }
 
-    /* ==== MODAL ==== */
     .modal {
       display: none;
       position: fixed;
@@ -129,6 +93,12 @@
       border-radius: 12px;
       width: 400px;
       text-align: center;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
@@ -206,11 +176,11 @@
             <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'proses')">Terima</button>
             <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'ditolak')">Tolak</button>
           `;
-        } else if (r.status === "diterima") {
+        } else if (r.status === "proses") {
           aksiBtn = `
             <button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>
           `;
-        } else if (r.status === "diproses") {
+        } else if (r.status === "dalam perjalanan") {
           aksiBtn = `
             <button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>
           `;
@@ -220,11 +190,11 @@
           <td>${r.report_id}</td>
           <td>${r.user_id}</td>
           <td>${r.description}</td>
-          <td>${r.img_url ? `<img src="${r.img_url}" alt="bukti">` : "Tidak ada"}</td>
+          <td>${r.image_url ? `<img src="${r.image_url}" alt="bukti">` : "Tidak ada"}</td>
           <td>${r.latitude || "-"}</td>
           <td>${r.longitude || "-"}</td>
           <td>${r.address || "-"}</td>
-          <td>${r.status || "pending"}</td>
+          <td>${r.status}</td>
           <td>${new Date(r.created_at).toLocaleString()}</td>
           <td>${aksiBtn}</td>
         `;
@@ -245,23 +215,11 @@
         body: JSON.stringify({ report_id: reportId, status })
       });
 
-      // DEBUG: tampilkan status HTTP
-      console.log("HTTP status:", res.status);
-
-      // Ambil response JSON
       const data = await res.json();
-
-      // DEBUG: tampilkan response server lengkap di console
-      console.log("Response server:", data);
-
-      // Tampilkan alert dengan prioritas: message > error > detail
-      alert(data.message || data.error || data.detail);
-
-      // Refresh tabel
+      alert(data.message || data.error);
       loadReports();
     } catch (err) {
-      // DEBUG: kalau ada error jaringan / fetch gagal
-      console.error("❌ Fetch error:", err);
+      console.error(err);
       alert("Terjadi error jaringan: " + err.message);
     }
   }
@@ -275,18 +233,20 @@
     document.getElementById("modalPetugas").style.display = "none";
     selectedReportId = null;
   }
+
   async function loadPetugas() {
-    const res = await fetch("/admin/get-petugas"); // ✅ disesuaikan
+    const res = await fetch("/admin/get-petugas");
     const petugas = await res.json();
     const select = document.getElementById("selectPetugas");
     select.innerHTML = "";
     petugas.forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.petugas_id;
-      opt.textContent = `${p.petugas_id} - ${p.nama}`;
+      opt.textContent = `${p.nama} (${p.petugas_id})`;
       select.appendChild(opt);
     });
   }
+
   async function confirmAssign() {
     const petugasId = document.getElementById("selectPetugas").value;
     if (!selectedReportId || !petugasId) return;
@@ -302,13 +262,11 @@
   }
 
   async function confirmDone(reportId) {
-    const keterangan = prompt("Masukkan keterangan bukti:");
-    if (!keterangan) return;
-    const formData = new FormData();
-    formData.append("report_id", reportId);
-    formData.append("keterangan", keterangan);
-    // TODO: handle file upload input di versi lengkap
-    const res = await fetch("/admin/confirm-done", { method: "POST", body: formData });
+    const res = await fetch("/admin/confirm-done", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report_id: reportId, status: "selesai" })
+    });
     const data = await res.json();
     alert(data.message || data.error);
     loadReports();
