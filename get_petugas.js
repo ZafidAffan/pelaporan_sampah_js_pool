@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/get-petugas", async (req, res) => {
   try {
     console.log("📡 [SERVER] Mengambil daftar petugas...");
-    const [rows] = await pool.query("SELECT petugas_id, nama, no_hp FROM petugas");
+    const [rows] = await pool.query("SELECT petugas_id, name, phone FROM petugas");
     console.log("✅ [SERVER] Hasil query:", rows);
     res.json(rows);
   } catch (err) {
