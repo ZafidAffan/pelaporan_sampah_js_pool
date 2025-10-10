@@ -23,11 +23,17 @@ router.post("/assign-task", async (req, res) => {
       [report_id]
     );
 
-    res.json({ success: true, message: `Laporan #${report_id} sudah dikirim ke petugas` });
+    res.json({
+      success: true,
+      message: `Laporan #${report_id} sudah dikirim ke petugas`
+    });
+
   } catch (err) {
     console.error("❌ Gagal assign task:", err);
-    res.status(500).json({ error: "Gagal assign task" });
-    detail: err.message
+    res.status(500).json({
+      error: "Gagal assign task",
+      detail: err.message  // ✅ dipindahkan ke dalam JSON
+    });
   }
 });
 
