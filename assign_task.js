@@ -27,6 +27,7 @@ router.post("/assign-task", async (req, res) => {
   } catch (err) {
     console.error("❌ Gagal assign task:", err);
     res.status(500).json({ error: "Gagal assign task" });
+    detail: err.message
   }
 });
 
