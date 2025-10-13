@@ -13,7 +13,7 @@ router.post("/assign-task", async (req, res) => {
 
     // Insert ke tabel daftar_tugas
     await pool.query(
-      "INSERT INTO daftar_tugas (report_id, petugas_id, status, created_at) VALUES (?, ?, 'proses', NOW())",
+      "INSERT INTO tugas (report_id, petugas_id, status, created_at) VALUES (?, ?, 'proses', NOW())",
       [report_id, petugas_id]
     );
 
