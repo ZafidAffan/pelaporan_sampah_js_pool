@@ -40,6 +40,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
+      transition: 0.3s;
     }
     .btn-assign {
       background: #347433;
@@ -51,9 +52,8 @@
     }
     .btn-loading {
       opacity: 0.6;
-      pointer-events: none;
+      cursor: wait;
     }
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -70,6 +70,7 @@
       border-radius: 10px;
       width: 400px;
       max-width: 90%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     .modal-header {
       font-weight: bold;
@@ -103,7 +104,9 @@
         <th>Aksi</th>
       </tr>
     </thead>
-    <tbody id="report-body"></tbody>
+    <tbody id="report-body">
+      <tr><td colspan="10">Memuat data...</td></tr>
+    </tbody>
   </table>
 
   <!-- Modal -->
@@ -124,48 +127,68 @@
 
     // 🔹 Load laporan dari backend
     async function loadReports() {
-      const res = await fetch("/admin/reports");
-      const data = await res.json();
-      const tbody = document.getElementById("report-body");
-      tbody.innerHTML = "";
+      try {
+        const res = await fetch("/admin/reports");
+        if (!res.ok) throw new Error("Gagal memuat laporan");
+        const data = await res.json();
 
-      data.forEach(r => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${r.report_id}</td>
-          <td>${r.user_id}</td>
-          <td>${r.description}</td>
-          <td><img src="${r.img_url}" width="80"></td>
-          <td>${r.latitude}</td>
-          <td>${r.longitude}</td>
-          <td>${r.address}</td>
-          <td>${r.status}</td>
-          <td>${r.created_at}</td>
-          <td>
-            ${r.status === "menunggu"
-              ? `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`
-              : r.status === "dalam_perjalanan"
-              ? `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`
-              : `<span>-</span>`
-            }
-          </td>
+        const tbody = document.getElementById("report-body");
+        tbody.innerHTML = "";
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10">Belum ada laporan</td></tr>`;
+          return;
+        }
+
+        data.forEach(r => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${r.report_id}</td>
+            <td>${r.user_id}</td>
+            <td>${r.description || "-"}</td>
+            <td>${r.img_url ? `<img src="${r.img_url}" width="80">` : "-"}</td>
+            <td>${r.latitude}</td>
+            <td>${r.longitude}</td>
+            <td>${r.address || "-"}</td>
+            <td>${r.status}</td>
+            <td>${r.created_at}</td>
+            <td>
+              ${r.status === "menunggu"
+                ? `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`
+                : r.status === "dalam perjalanan"
+                ? `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`
+                : `<span>-</span>`
+              }
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error("❌ Error loadReports:", err);
+        document.getElementById("report-body").innerHTML = `
+          <tr><td colspan="10" style="color:red;">Gagal memuat data laporan.</td></tr>
         `;
-        tbody.appendChild(row);
-      });
+      }
     }
 
-    // 🔹 Load petugas ke dropdown
+    // 🔹 Load petugas
     async function loadPetugas() {
-      const res = await fetch("/admin/petugas");
-      const data = await res.json();
-      const select = document.getElementById("selectPetugas");
-      select.innerHTML = `<option value="">-- Pilih Petugas --</option>`;
-      data.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.user_id;
-        opt.textContent = p.nama || `Petugas #${p.user_id}`;
-        select.appendChild(opt);
-      });
+      try {
+        const res = await fetch("/admin/petugas");
+        if (!res.ok) throw new Error("Gagal memuat petugas");
+        const data = await res.json();
+        const select = document.getElementById("selectPetugas");
+        select.innerHTML = `<option value="">-- Pilih Petugas --</option>`;
+        data.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.petugas_id;
+          opt.textContent = p.name || `Petugas #${p.petugas_id}`;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("❌ Gagal load petugas:", err);
+        alert("Gagal memuat daftar petugas");
+      }
     }
 
     // 🔹 Buka modal assign
@@ -181,7 +204,7 @@
       selectedReportId = null;
     }
 
-    // 🔹 Konfirmasi kirim ke petugas
+    // 🔹 Kirim ke petugas
     async function confirmAssign() {
       const petugasId = document.getElementById("selectPetugas").value;
       const btnKirim = document.getElementById("btnKirim");
@@ -195,7 +218,7 @@
       btnKirim.textContent = "Mengirim...";
 
       try {
-        const res = await fetch("/admin/assign-task", {
+        const res = await fetch("/assign-task", { // ⬅️ perhatikan endpoint ini
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -205,29 +228,17 @@
         });
 
         const data = await res.json();
-        alert(data.message || data.error);
+        console.log("📤 Response:", data);
 
-        if (data.success) {
-          // 🔹 Update langsung DOM tanpa reload
-          const cell = Array.from(document.querySelectorAll("#report-body td:first-child"))
-            .find(td => td.textContent == selectedReportId);
-
-          if (cell) {
-            const row = cell.parentElement;
-            row.children[7].textContent = "dalam perjalanan";
-            row.children[9].innerHTML = `
-              <button class="btn btn-confirm" onclick="confirmDone(${selectedReportId})">
-                Konfirmasi Selesai
-              </button>
-            `;
-          }
-        }
+        if (!res.ok) throw new Error(data.error || "Gagal assign task");
+        alert(data.message);
 
         closeModal();
+        await loadReports();
 
       } catch (err) {
         console.error("❌ Gagal kirim:", err);
-        alert("Terjadi kesalahan saat mengirim ke petugas.");
+        alert(err.message || "Terjadi kesalahan saat mengirim ke petugas.");
       } finally {
         btnKirim.classList.remove("btn-loading");
         btnKirim.textContent = "Kirim ke Petugas";
@@ -237,7 +248,6 @@
     // 🔹 Konfirmasi laporan selesai
     async function confirmDone(reportId) {
       if (!confirm("Yakin laporan ini sudah selesai?")) return;
-
       try {
         const res = await fetch(`/admin/confirm-done/${reportId}`, { method: "PUT" });
         const data = await res.json();
@@ -248,7 +258,7 @@
       }
     }
 
-    // Load pertama kali
+    // Load awal
     loadReports();
   </script>
 </body>
