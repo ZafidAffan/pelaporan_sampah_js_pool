@@ -6,23 +6,18 @@ const router = express.Router();
 // GET /admin/laporan
 router.get("/laporan", async (req, res) => {
   try {
-    // Ambil laporan + bukti_tugas (jika ada)
-    const [rows] = await pool.query(`
-      SELECT 
-        r.*, 
-        b.img_url AS bukti_img,
-        b.tugas_id AS bukti_tugas_id,
-        b.completed_at AS bukti_completed_at
-      FROM reports r
-      LEFT JOIN bukti_tugas b ON r.report_id = b.report_id
-      ORDER BY r.created_at DESC
-    `);
+    // Coba ambil semua data tanpa ORDER BY dulu
+    const [rows] = await pool.query("SELECT * FROM reports");
 
-    console.log("✅ Hasil query laporan + bukti:", rows.length, "data");
+    // Log ke server biar tau isi rows
+    console.log("Hasil query reports:", rows);
+
+    // Selalu return array
     res.json(rows);
   } catch (err) {
-    console.error("❌ Error ambil laporan:", err.message);
-    res.status(500).json({ error: "Gagal mengambil data laporan", detail: err.message });
+    console.error("Error ambil laporan:", err.message);
+    console.error(err); // log detail error
+    res.status(500).json({ error: err.message });
   }
 });
 
