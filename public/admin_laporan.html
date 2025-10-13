@@ -113,7 +113,7 @@
 
           if (r.status === "pending") {
             aksiBtn = `
-              <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'proses')">Terima</button>
+              <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'diterima')">Terima</button>
               <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'ditolak')">Tolak</button>
             `;
           } else if (r.status === "diterima") {
