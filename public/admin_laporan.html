@@ -116,7 +116,7 @@
               <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'proses')">Terima</button>
               <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'ditolak')">Tolak</button>
             `;
-          } else if (r.status === "proses") {
+          } else if (r.status === "diterima") {
             aksiBtn = `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`;
           } else if (r.status === "dalam perjalanan") {
             aksiBtn = `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`;
