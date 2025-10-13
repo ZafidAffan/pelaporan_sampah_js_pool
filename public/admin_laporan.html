@@ -118,7 +118,7 @@
             `;
           } else if (r.status === "diterima") {
             aksiBtn = `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`;
-          } else if (r.status === "dalam perjalanan") {
+          } else if (r.status === "proses") {
             aksiBtn = `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`;
           } else {
             aksiBtn = "-";
