@@ -22,7 +22,7 @@ router.post("/assign-task", async (req, res) => {
 
     // ✅ Insert ke tabel tugas
     const [insertResult] = await pool.query(
-      "INSERT INTO tugas (report_id, petugas_id, status, assigned_at) VALUES (?, ?, 'proses', NOW())",
+      "INSERT INTO tugas (report_id, petugas_id, status, assigned_at) VALUES (?, ?, 'menunggu', NOW())",
       [report_id, petugas_id]
     );
 
