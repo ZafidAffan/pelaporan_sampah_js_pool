@@ -46,6 +46,7 @@
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+      z-index: 999;
     }
     .modal-content { background: white; padding: 20px; border-radius: 12px; width: 400px; text-align: center; }
     select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
@@ -120,6 +121,10 @@
             aksiBtn = `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`;
           } else if (r.status === "proses") {
             aksiBtn = `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`;
+          } else if (r.status === "selesai") {
+            aksiBtn = r.bukti_url
+              ? `<button class="btn btn-confirm" onclick="lihatBukti('${r.bukti_url}')">Lihat Bukti</button>`
+              : "-";
           } else {
             aksiBtn = "-";
           }
@@ -208,6 +213,26 @@
       const data = await res.json();
       alert(data.message || data.error);
       loadReports();
+    }
+
+    // 🔍 Fitur lihat bukti
+    function lihatBukti(url) {
+      const modalHtml = `
+        <div class="modal" id="modalBukti" style="display:flex;">
+          <div class="modal-content" style="width:500px; text-align:center;">
+            <h3>Bukti Tugas</h3>
+            <img src="${url}" alt="Bukti" style="max-width:100%; border-radius:8px;">
+            <br><br>
+            <button class="btn btn-reject" onclick="closeBukti()">Tutup</button>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    function closeBukti() {
+      const modal = document.getElementById("modalBukti");
+      if (modal) modal.remove();
     }
 
     loadReports();
