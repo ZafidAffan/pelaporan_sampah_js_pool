@@ -42,7 +42,7 @@ router.get("/laporan", async (req, res) => {
 
     res.status(500).json({
       success: false,
-      error: "Gagal mengambil data laporan admin",
+      error: "Gagal euy  mengambil data laporan admin",
       detail: err.message,
     });
   }
