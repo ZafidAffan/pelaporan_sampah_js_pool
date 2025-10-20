@@ -40,7 +40,7 @@ router.post("/", upload.single("bukti"), async (req, res) => {
     // 🗂️ Update tabel tugas
     const [updateResult] = await pool.query(
       `UPDATE tugas 
-       SET img_url = ?, status = 'done', completed_at = NOW()
+       SET img_url = ?, status = 'selesai', completed_at = NOW()
        WHERE tugas_id = ?`,
       [response.url, tugas_id]
     );
