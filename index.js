@@ -28,6 +28,7 @@ app.use('/admin', require('./admin_login'));
 app.use('/admin', require('./admin_register'));
 app.use('/admin', require('./admin_dashboard'));  
 app.use('/admin', require('./admin_laporan'));
+app.use('/admin', require('./admin_tugas'));
 
 // === ROUTES ADMIN TAMBAHAN ===
 app.use('/admin', require('./update_status'));
