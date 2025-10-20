@@ -132,7 +132,7 @@
       const res = await fetch("/admin/confirm-tugas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tugas_id: tugasId, status_final: "selesai" })
+        body: JSON.stringify({ tugas_id: tugasId, status_final: "disetujui" })
       });
       const data = await res.json();
       alert(data.message || data.error);
