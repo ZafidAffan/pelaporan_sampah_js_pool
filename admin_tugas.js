@@ -3,7 +3,7 @@ const express = require("express");
 const pool = require("./db_promise_asyncawait"); // koneksi mysql2/promise
 const router = express.Router();
 
-// GET /admin/tugas
+// GET /admin/tugas - ambil semua tugas
 router.get("/tugas", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM tugas");
@@ -15,7 +15,7 @@ router.get("/tugas", async (req, res) => {
   }
 });
 
-// POST /admin/confirm-tugas
+// POST /admin/confirm-tugas - konfirmasi tugas selesai
 router.post("/confirm-tugas", async (req, res) => {
   const { tugas_id, status_final } = req.body;
 
@@ -24,10 +24,10 @@ router.post("/confirm-tugas", async (req, res) => {
   }
 
   try {
-    // Update kolom status_final dan verified_at
+    const admin_id = 1; // ganti sesuai ID admin login
     const [result] = await pool.query(
       "UPDATE tugas SET status_final = ?, verified_by = ?, verified_at = NOW() WHERE tugas_id = ?",
-      [status_final, "Admin", tugas_id]
+      [status_final, admin_id, tugas_id]
     );
 
     if (result.affectedRows === 0) {
