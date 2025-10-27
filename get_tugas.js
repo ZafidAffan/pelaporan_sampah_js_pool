@@ -11,23 +11,37 @@ router.use((req, res, next) => {
   next();
 });
 
+// ✅ GET /get-tugas?petugas_id=123
 router.get("/", async (req, res) => {
   const { petugas_id } = req.query;
   if (!petugas_id) return res.status(400).json({ error: "petugas_id wajib" });
 
   try {
     const [rows] = await pool.query(
-      `SELECT tugas_id, report_id, petugas_id, status, assigned_at, 
-              completed_at, status_final, verified_by, verified_at
-       FROM tugas
-       WHERE petugas_id = ? 
-       ORDER BY assigned_at DESC`,
+      `SELECT 
+          t.tugas_id, 
+          t.report_id, 
+          t.petugas_id, 
+          t.status, 
+          t.assigned_at, 
+          t.completed_at, 
+          t.status_final, 
+          t.verified_by, 
+          t.verified_at,
+          t.latitude, 
+          t.longitude,
+          r.address,
+          r.img_url
+       FROM tugas t
+       LEFT JOIN reports r ON t.report_id = r.report_id
+       WHERE t.petugas_id = ? 
+       ORDER BY t.assigned_at DESC`,
       [petugas_id]
     );
 
-    res.json({ tugas: rows }); // ✅ hasil sesuai ekspektasi frontend
+    res.json({ tugas: rows }); // ✅ kirim hasil ke frontend
   } catch (err) {
-    console.error("Error get tugas:", err);
+    console.error("❌ Error get tugas:", err);
     res.status(500).json({ error: "Gagal mengambil tugas" });
   }
 });
