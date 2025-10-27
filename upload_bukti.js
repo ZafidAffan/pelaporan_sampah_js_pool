@@ -12,10 +12,10 @@ router.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   if (req.method === "OPTIONS") return res.sendStatus(200);
-  next(); // ✅ penting agar request lanjut ke route berikutnya
+  next();
 });
 
-// 🧠 Gunakan memory storage (tidak simpan file di server lokal)
+// 🧠 Gunakan memory storage (tidak menyimpan file di server lokal)
 const upload = multer({ storage: multer.memoryStorage() });
 
 // 📤 Endpoint: Upload bukti tugas
@@ -45,16 +45,25 @@ router.post("/", upload.single("bukti"), async (req, res) => {
     const response = await imgbbUploader({
       apiKey: process.env.IMGBB_API_KEY,
       base64string: imageFile.buffer.toString("base64"),
+      // tidak memaksa endpoint di sini — kita hanya ubah URL hasilnya seperti di report.js
     });
 
-    console.log("✅ Upload ImgBB sukses:", response.url);
+    // ✅ Ambil URL hasil upload
+    let imageUrl = response.url;
 
-    // 🗂️ Update tabel tugas
+    // ✅ Perbaiki domain ImgBB jika perlu (sesuai yang sudah teruji di report.js)
+    if (imageUrl && imageUrl.includes("i.ibb.co/")) {
+      imageUrl = imageUrl.replace("i.ibb.co/", "i.ibb.co.com/");
+    }
+
+    console.log("✅ Final image URL:", imageUrl);
+
+    // 🗂️ Update tabel tugas (pastikan kolom img_url ada di tabel tugas)
     const [updateResult] = await pool.query(
       `UPDATE tugas 
        SET img_url = ?, status = 'selesai', completed_at = NOW()
        WHERE tugas_id = ?`,
-      [response.url, tugas_id]
+      [imageUrl, tugas_id]
     );
 
     console.log("📝 Update tugas selesai:", updateResult);
@@ -63,7 +72,7 @@ router.post("/", upload.single("bukti"), async (req, res) => {
     res.json({
       success: true,
       message: "✅ Bukti berhasil diupload dan status tugas diperbarui.",
-      img_url: response.url,
+      img_url: imageUrl,
     });
   } catch (err) {
     console.error("❌ Gagal upload bukti:", err);
