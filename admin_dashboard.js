@@ -1,10 +1,10 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./db'); // koneksi MySQL pakai db.js
+const pool = require('./db'); // koneksi MySQL
 
 const router = express.Router();
 
-// ===== Middleware cek login admin =====
+// middleware cek login admin
 function isAdminLoggedIn(req, res, next) {
   if (!req.session || !req.session.admin_id) {
     return res.redirect('/admin_login.html'); 
@@ -12,29 +12,19 @@ function isAdminLoggedIn(req, res, next) {
   next();
 }
 
-// ===== Route tampilkan HTML dashboard =====
+// Route serve HTML dashboard
 router.get('/dashboard', isAdminLoggedIn, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin_dashboard.html'));
 });
 
-// ===== API untuk ambil data dashboard =====
+// Route API data dashboard
 router.get('/dashboard-data', isAdminLoggedIn, async (req, res) => {
   try {
     const conn = await pool.getConnection();
 
-    // Hitung laporan berdasarkan status
-    const [pending] = await conn.query(
-      "SELECT COUNT(*) AS count FROM reports WHERE status = 'pending'"
-    );
-
-    // Status 'diterima' masuk kategori 'Diproses'
-    const [proses]  = await conn.query(
-      "SELECT COUNT(*) AS count FROM reports WHERE status = 'diterima'"
-    );
-
-    const [selesai] = await conn.query(
-      "SELECT COUNT(*) AS count FROM reports WHERE status = 'selesai'"
-    );
+    const [pending] = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'pending'");
+    const [proses]  = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'proses'");
+    const [selesai] = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'selesai'");
 
     conn.release();
 
@@ -45,7 +35,7 @@ router.get('/dashboard-data', isAdminLoggedIn, async (req, res) => {
       selesai: selesai[0].count
     });
   } catch (err) {
-    console.error('Error dashboard-data:', err);
+    console.error(err);
     res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
   }
 });
