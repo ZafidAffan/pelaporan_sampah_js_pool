@@ -14,7 +14,7 @@ app.use('/report', require('./report'));
 app.use('/locations', require('./get_locations'));
 app.use('/report-status', require('./get_report_status'));
 app.use('/user', require('./get_user'));
-app.use('/user-report', require('./get_user_report'));
+
 
 // === ROUTES PETUGAS ===
 app.use('/login_petugas', require('./login_petugas'));
