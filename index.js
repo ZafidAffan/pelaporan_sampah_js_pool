@@ -22,6 +22,7 @@ app.use('/register-petugas', require('./register_petugas'));
 app.use('/get-tugas', require('./get_tugas'));
 app.use('/upload-bukti', require('./upload_bukti'));
 
+app.use('/user-report', require('./user_report'));
 
 
 // === ROUTES ADMIN ===
