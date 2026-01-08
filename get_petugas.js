@@ -1,10 +1,11 @@
+// get_petugas.js
 const express = require("express");
 const pool = require("./db_promise_asyncawait");
 
 const router = express.Router();
 
 // =======================
-// CORS
+// CORS (aman untuk Vercel)
 // =======================
 router.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -26,12 +27,14 @@ router.get("/", async (req, res) => {
        ORDER BY name ASC`
     );
 
-    res.json(rows); // <-- mengembalikan array semua petugas
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: "Belum ada data petugas" });
+    }
+
+    res.json(rows); // Kembalikan array semua petugas
   } catch (err) {
     console.error("❌ Error get_petugas:", err);
-    res.status(500).json({
-      message: "Gagal mengambil data petugas",
-    });
+    res.status(500).json({ message: "Gagal mengambil data petugas", error: err.message });
   }
 });
 
