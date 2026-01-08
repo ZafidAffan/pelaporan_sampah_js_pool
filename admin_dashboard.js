@@ -1,7 +1,7 @@
 // admin_dashboard.js
 const express = require('express');
 const path = require('path');
-const pool = require('./db'); // koneksi MySQL
+const pool = require('./db_promise_asyncawait'); // koneksi MySQL
 
 const router = express.Router();
 
