@@ -49,6 +49,12 @@
     }
     .modal-content { background: white; padding: 20px; border-radius: 12px; width: 400px; text-align: center; }
     select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+
+    /* Search input */
+    #searchInput {
+      width: 50%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;
+      font-size: 14px; display: block; margin: 0 auto 12px auto;
+    }
   </style>
 </head>
 <body>
@@ -67,6 +73,10 @@
 
   <div class="container">
     <h1>Daftar Laporan Pengguna</h1>
+
+    <!-- Search Bar -->
+    <input type="text" id="searchInput" placeholder="Cari berdasarkan alamat atau deskripsi..." onkeyup="filterReports()">
+
     <table>
       <thead>
         <tr>
@@ -94,55 +104,70 @@
 
   <script>
     let selectedReportId = null;
+    let allReports = []; // untuk search/filter
 
     async function loadReports() {
       try {
         const res = await fetch("/admin/laporan");
         const reports = await res.json();
         console.log("Respons dari API:", reports);
-        const tbody = document.getElementById("report-body");
-        tbody.innerHTML = "";
-
-        if (!Array.isArray(reports) || reports.length === 0) {
-          tbody.innerHTML = "<tr><td colspan='10'>Belum ada laporan.</td></tr>";
-          return;
-        }
-
-        reports.forEach(r => {
-          const tr = document.createElement("tr");
-          let aksiBtn = "";
-
-          if (r.status === "pending") {
-            aksiBtn = `
-              <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'diterima')">Terima</button>
-              <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'ditolak')">Tolak</button>
-            `;
-          } else if (r.status === "diterima") {
-            aksiBtn = `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`;
-          } else if (r.status === "proses") {
-            aksiBtn = `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`;
-          } else {
-            aksiBtn = "-";
-          }
-
-          tr.innerHTML = `
-            <td>${r.report_id}</td>
-            <td>${r.user_id}</td>
-            <td>${r.description}</td>
-            <td>${r.img_url ? `<img src="${r.img_url}" alt="bukti">` : "Tidak ada"}</td>
-            <td>${r.latitude || "-"}</td>
-            <td>${r.longitude || "-"}</td>
-            <td>${r.address || "-"}</td>
-            <td>${r.status}</td>
-            <td>${new Date(r.created_at).toLocaleString()}</td>
-            <td>${aksiBtn}</td>
-          `;
-          tbody.appendChild(tr);
-        });
+        allReports = reports; // simpan semua data
+        renderReports(allReports);
       } catch (err) {
         console.error("❌ Gagal memuat laporan:", err);
         document.getElementById("report-body").innerHTML = "<tr><td colspan='10'>Gagal memuat data laporan.</td></tr>";
       }
+    }
+
+    function renderReports(reports) {
+      const tbody = document.getElementById("report-body");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(reports) || reports.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='10'>Belum ada laporan.</td></tr>";
+        return;
+      }
+
+      reports.forEach(r => {
+        const tr = document.createElement("tr");
+        let aksiBtn = "";
+
+        if (r.status === "pending") {
+          aksiBtn = `
+            <button class="btn btn-accept" onclick="updateStatus(${r.report_id}, 'diterima')">Terima</button>
+            <button class="btn btn-reject" onclick="updateStatus(${r.report_id}, 'ditolak')">Tolak</button>
+          `;
+        } else if (r.status === "diterima") {
+          aksiBtn = `<button class="btn btn-assign" onclick="openModal(${r.report_id})">Kirim ke Petugas</button>`;
+        } else if (r.status === "proses") {
+          aksiBtn = `<button class="btn btn-confirm" onclick="confirmDone(${r.report_id})">Konfirmasi Selesai</button>`;
+        } else {
+          aksiBtn = "-";
+        }
+
+        tr.innerHTML = `
+          <td>${r.report_id}</td>
+          <td>${r.user_id}</td>
+          <td>${r.description}</td>
+          <td>${r.img_url ? `<img src="${r.img_url}" alt="bukti">` : "Tidak ada"}</td>
+          <td>${r.latitude || "-"}</td>
+          <td>${r.longitude || "-"}</td>
+          <td>${r.address || "-"}</td>
+          <td>${r.status}</td>
+          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td>${aksiBtn}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterReports() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allReports.filter(r => 
+        (r.address && r.address.toLowerCase().includes(query)) ||
+        (r.description && r.description.toLowerCase().includes(query))
+      );
+      renderReports(filtered);
     }
 
     async function updateStatus(reportId, status) {
