@@ -1,4 +1,3 @@
-// get_petugas.js
 const express = require("express");
 const pool = require("./db_promise_asyncawait");
 
@@ -22,10 +21,10 @@ router.use((req, res, next) => {
   next();
 });
 
-// ===============================
-// GET /get_petugas?petugas_id=1
-// ===============================
-router.get("/", async (req, res) => {
+// =====================================
+// GET /admin/get-petugas?petugas_id=1
+// =====================================
+router.get("/get-petugas", async (req, res) => {
   try {
     const { petugas_id } = req.query;
 
@@ -35,10 +34,10 @@ router.get("/", async (req, res) => {
       });
     }
 
-    console.log("📡 [GET PETUGAS] petugas_id:", petugas_id);
-
     const [rows] = await pool.query(
-      "SELECT petugas_id, name, email, phone FROM petugas WHERE petugas_id = ?",
+      `SELECT petugas_id, name, email, phone
+       FROM petugas
+       WHERE petugas_id = ?`,
       [petugas_id]
     );
 
@@ -53,7 +52,6 @@ router.get("/", async (req, res) => {
     console.error("❌ Error get_petugas:", err);
     res.status(500).json({
       message: "Gagal mengambil data petugas",
-      error: err.message,
     });
   }
 });
