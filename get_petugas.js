@@ -1,53 +1,59 @@
-// routes/get_petugas.js
+// get_petugas.js
 const express = require("express");
 const pool = require("./db_promise_asyncawait");
+
 const router = express.Router();
 
-/*
-👤 GET PETUGAS BY ID
-Endpoint:
-GET /get_petugas?petugas_id=1
-*/
+// =======================
+// CORS (aman untuk Vercel)
+// =======================
+router.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
+
+// ===============================
+// GET /get_petugas?petugas_id=1
+// ===============================
 router.get("/", async (req, res) => {
-  const { petugas_id } = req.query;
-
-  // Validasi
-  if (!petugas_id) {
-    return res.status(400).json({
-      error: "petugas_id wajib dikirim",
-    });
-  }
-
   try {
-    console.log("📡 [SERVER] Ambil data petugas:", petugas_id);
+    const { petugas_id } = req.query;
 
-    const [rows] = await pool.query(
-      `
-      SELECT 
-        petugas_id,
-        name,
-        email,
-        phone
-      FROM petugas
-      WHERE petugas_id = ?
-      `,
-      [petugas_id]
-    );
-
-    // Jika tidak ditemukan
-    if (rows.length === 0) {
-      return res.status(404).json({
-        error: "Petugas tidak ditemukan",
+    if (!petugas_id) {
+      return res.status(400).json({
+        message: "petugas_id wajib dikirim",
       });
     }
 
-    // Kirim 1 object (bukan array)
+    console.log("📡 [GET PETUGAS] petugas_id:", petugas_id);
+
+    const [rows] = await pool.query(
+      "SELECT petugas_id, name, email, phone FROM petugas WHERE petugas_id = ?",
+      [petugas_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        message: "Petugas tidak ditemukan",
+      });
+    }
+
     res.json(rows[0]);
   } catch (err) {
-    console.error("❌ [SERVER] Gagal ambil petugas:", err);
+    console.error("❌ Error get_petugas:", err);
     res.status(500).json({
-      error: "Gagal mengambil data petugas",
-      detail: err.message,
+      message: "Gagal mengambil data petugas",
+      error: err.message,
     });
   }
 });
