@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // ================= MIDDLEWARE =================
-// Middleware untuk parsing JSON
+// Parsing JSON
 app.use(express.json());
 
 // Serve folder upload (gambar, dokumen, dsb.)
@@ -31,24 +31,28 @@ app.use('/upload-bukti', require('./upload_bukti'));
 app.use('/user-report', require('./user_report'));
 
 // ================= ROUTES ADMIN =================
-app.use('/admin', require('./admin_login'));
-app.use('/admin', require('./admin_register'));
-app.use('/admin', require('./admin_dashboard'));
-app.use('/admin', require('./admin_laporan'));
-app.use('/admin', require('./admin_tugas'));
+// Login & Register Admin
+app.use('/admin/login', require('./admin_login'));
+app.use('/admin/register', require('./admin_register'));
+
+// Dashboard, laporan, tugas
+app.use('/admin/dashboard', require('./admin_dashboard'));
+app.use('/admin/laporan', require('./admin_laporan'));
+app.use('/admin/tugas', require('./admin_tugas'));
 
 // ================= ROUTES ADMIN TAMBAHAN =================
-app.use('/admin', require('./update_status'));
-app.use('/admin', require('./assign_task'));
-app.use('/admin', require('./confirm_done'));
-app.use('/admin', require('./get_petugas'));
+// Update status, assign task, confirm done
+app.use('/admin/update-status', require('./update_status'));
+app.use('/admin/assign-task', require('./assign_task'));
+app.use('/admin/confirm-done', require('./confirm_done'));
+
+// Ambil data petugas
+app.use('/admin/get-petugas', require('./get_petugas'));
 
 // ================= ROUTE STATUS TUGAS PETUGAS =================
 app.use('/', require('./tugas_status'));
 
-
 // ================= ROUTE KHUSUS ADMIN HTML =================
-// Halaman peta admin
 app.get('/admin/peta', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin_peta.html'));
 });
