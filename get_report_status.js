@@ -48,7 +48,7 @@ router.get('/', (req, res) => {
         case 'diterima':
           data.diproses = row.jumlah;
           break;
-        case 'selesai':
+        case 'proses':
           data.selesai = row.jumlah;
           break;
         default:
