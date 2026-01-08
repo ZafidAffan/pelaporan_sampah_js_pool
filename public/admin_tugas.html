@@ -193,9 +193,11 @@
             ? `<img src="${t.img_url}" alt="Bukti">`
             : "Belum ada";
 
+          // Tombol aksi fleksibel
           let aksiBtn = "-";
+          const statusFinalLower = (t.status_final || "").toLowerCase();
 
-          if (t.status_final === "menunggu verifikasi") {
+          if (statusFinalLower.includes("menunggu") || statusFinalLower.includes("pending")) {
             aksiBtn = `
               <button class="btn btn-confirm"
                 onclick="confirmDone(${t.tugas_id})">
@@ -203,10 +205,10 @@
               </button>
             `;
           } 
-          else if (t.status_final === "disetujui") {
+          else if (statusFinalLower.includes("disetujui")) {
             aksiBtn = `<span class="status-success">✔ Selesai</span>`;
           } 
-          else if (t.status_final === "ditolak") {
+          else if (statusFinalLower.includes("ditolak")) {
             aksiBtn = `<span class="status-reject">✖ Ditolak</span>`;
           }
 
