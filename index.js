@@ -43,6 +43,10 @@ app.use('/admin', require('./assign_task'));
 app.use('/admin', require('./confirm_done'));
 app.use('/admin', require('./get_petugas'));
 
+// ================= ROUTE STATUS TUGAS PETUGAS =================
+app.use('/', require('./tugas_status'));
+
+
 // ================= ROUTE KHUSUS ADMIN HTML =================
 // Halaman peta admin
 app.get('/admin/peta', (req, res) => {
