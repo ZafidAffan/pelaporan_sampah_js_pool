@@ -42,7 +42,7 @@ router.get('/dashboard-data', async (req, res) => {
 
     // Ambil jumlah laporan berdasarkan status
     const [pending] = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'pending'");
-    const [proses]  = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'proses'");
+    const [proses]  = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'diterima'");
     const [selesai] = await conn.query("SELECT COUNT(*) AS count FROM reports WHERE status = 'selesai'");
 
     conn.release();
