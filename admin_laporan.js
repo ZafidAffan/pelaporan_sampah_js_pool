@@ -1,23 +1,68 @@
 // admin_laporan.js
 const express = require("express");
-const pool = require("./db_promise_asyncawait"); // koneksi mysql2/promise
+const pool = require("./db_promise_asyncawait");
+const fetch = require("node-fetch"); // npm i node-fetch@2
 const router = express.Router();
 
-// GET /admin/laporan
-router.get("/laporan", async (req, res) => {
+// Middleware cek admin login
+function isAdminLoggedIn(req, res, next) {
+  if (!req.session || !req.session.admin_id) {
+    return res.status(401).json({ error: "Anda harus login sebagai admin" });
+  }
+  next();
+}
+
+// Fungsi reverse geocoding pakai Nominatim OSM
+async function getAddressFromLatLng(lat, lng) {
+  if (!lat || !lng) return null;
   try {
-    // Coba ambil semua data tanpa ORDER BY dulu
-    const [rows] = await pool.query("SELECT * FROM reports");
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+    const response = await fetch(url, { headers: { "User-Agent": "AdminDashboard/1.0" } });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.display_name || null;
+  } catch (err) {
+    console.error("❌ Error reverse geocoding:", err.message);
+    return null;
+  }
+}
 
-    // Log ke server biar tau isi rows
-    console.log("Hasil query reports:", rows);
+// GET /admin/laporan
+router.get("/laporan", isAdminLoggedIn, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT report_id, user_id, description, img_url, latitude, longitude, address, status, created_at
+      FROM reports
+      ORDER BY created_at DESC
+    `);
 
-    // Selalu return array
-    res.json(rows);
+    const formattedRows = [];
+
+    for (const r of rows) {
+      let address = r.address;
+      
+      // Jika alamat kosong, lakukan reverse geocoding
+      if (!address && r.latitude && r.longitude) {
+        address = await getAddressFromLatLng(r.latitude, r.longitude);
+      }
+
+      formattedRows.push({
+        report_id: r.report_id,
+        user_id: r.user_id,
+        description: r.description,
+        img_url: r.img_url || null,
+        latitude: r.latitude || null,
+        longitude: r.longitude || null,
+        address: address,
+        status: r.status,
+        created_at: r.created_at
+      });
+    }
+
+    res.json(formattedRows);
   } catch (err) {
     console.error("Error ambil laporan:", err.message);
-    console.error(err); // log detail error
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Terjadi kesalahan server" });
   }
 });
 
